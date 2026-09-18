@@ -16,18 +16,6 @@ https://github.com/user-attachments/assets/0840f496-575c-4ca6-83a8-87bb01a85c5f
 
 </div>
 
----
-
-### 👋 Why this fork?
-
-Ayush switched over to Hyprland and archived his repo. That's totally understandable, but many of us still love and daily-drive Niri. Without an active upstream, Niri users were left without a maintained home for this shell.
-
-We're keeping this fork alive and kicking:
-- **Active maintenance**: Keeping it working with newer Quickshell, Niri, and distro package updates, fixing bugs, and reviewing issues.
-- **Core C++ optimizations**: We're working on optimizing the shell's core with C++ (taking heavy system polling, IPC handling, and backend services off JavaScript/QML) to keep it fast and light on RAM.
-- **Same look, zero rebrands**: Keeping the exact same Caelestia aesthetic and configuration you know. No random renaming or breaking changes.
-
----
 
 <div align=center> <h2> Screenshots (OLD)</h2>
 
