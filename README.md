@@ -1,45 +1,14 @@
----
-
-## 🪦 Archived — I Moved On (and That's Okay!)
-
-Hey there, traveler! 👋
-
-This repo is now **archived** — meaning it's read-only, frozen in time like a really cool fossil. 🦕
-
-I had an absolute blast building this thing. It was my first time ever touching **Quickshell**, and honestly? I learned *so much* — from QML quirks to wrangling IPC commands at 2am. If you poked around the code and thought "what was he thinking here?", the answer is probably "I have no idea, but it worked!" 😅
-
-### So... what happened?
-
-I switched to **Hyprland** 🏃, and Hyprland has native scrolling support built right in — so a lot of what I was hacking around in Niri no longer needed a custom shell to solve. It made more sense to move my energy there.
-
-### Is this usable?
-
-Honestly? **It might still work for you!** The code is all here, the README has the full setup guide, and nothing is going anywhere. Fork it, adapt it, learn from it — that's exactly what I did from the projects that inspired me. 🙏
-
-### Shoutouts before I go
-
-This whole thing wouldn't exist without [jutraim](https://github.com/jutraim/niri-caelestia-shell), [Caelestia](https://github.com/caelestia-dots/shell), and [end-4](https://github.com/end-4/dots-hyprland) — absolute legends. 🌟
-
-Thanks for starring, filing issues, and being curious. It meant a lot.
-
-*— Ayush, now somewhere in Hyprland-land* 🚀
-
----
-
-
-
-<h1 align=center>🌌 Niri-Caelestia Shell</h1>
+<h1 align=center>🌌 Caelestia Shell for Niri</h1>
 
 <div align=center>
 
-![GitHub last commit](https://img.shields.io/github/last-commit/Ayushkr2003/niri-caelestia-shell?style=for-the-badge&labelColor=101418&color=9ccbfb)
-![GitHub Repo stars](https://img.shields.io/github/stars/Ayushkr2003/niri-caelestia-shell?style=for-the-badge&labelColor=101418&color=b9c8da)
-![GitHub repo size](https://img.shields.io/github/repo-size/Ayushkr2003/niri-caelestia-shell?style=for-the-badge&labelColor=101418&color=d3bfe6)
+![GitHub last commit](https://img.shields.io/github/last-commit/irrationalpi2008-bot/niri-caelestia-shell?style=for-the-badge&labelColor=101418&color=9ccbfb)
+![GitHub Repo stars](https://img.shields.io/github/stars/irrationalpi2008-bot/niri-caelestia-shell?style=for-the-badge&labelColor=101418&color=b9c8da)
+![GitHub repo size](https://img.shields.io/github/repo-size/irrationalpi2008-bot/niri-caelestia-shell?style=for-the-badge&labelColor=101418&color=d3bfe6)
 
 </div>
 
-
-> Personal fork of [jutraim's niri-caelestia-shell](https://github.com/jutraim/niri-caelestia-shell) (Niri adaptation of [Caelestia Shell](https://github.com/caelestia-dots/shell)) with my tweaks. **WIP** 🚧
+> Actively maintained fork of [AyushKr2003's niri-caelestia-shell](https://github.com/AyushKr2003/niri-caelestia-shell). Kept alive for Niri users, with ongoing C++ core optimizations. 🚀
 
 <div align=center>
 
@@ -47,8 +16,20 @@ https://github.com/user-attachments/assets/0840f496-575c-4ca6-83a8-87bb01a85c5f
 
 </div>
 
+---
 
-<div align=center> <h2>  Screenshots (OLD)</h2>
+### 👋 Why this fork?
+
+Ayush switched over to Hyprland and archived his repo. That's totally understandable, but many of us still love and daily-drive Niri. Without an active upstream, Niri users were left without a maintained home for this shell.
+
+We're keeping this fork alive and kicking:
+- **Active maintenance**: Keeping it working with newer Quickshell, Niri, and distro package updates, fixing bugs, and reviewing issues.
+- **Core C++ optimizations**: We're working on optimizing the shell's core with C++ (taking heavy system polling, IPC handling, and backend services off JavaScript/QML) to keep it fast and light on RAM.
+- **Same look, zero rebrands**: Keeping the exact same Caelestia aesthetic and configuration you know. No random renaming or breaking changes.
+
+---
+
+<div align=center> <h2> Screenshots (OLD)</h2>
 
 | App Launcher | Clipboard |
 |:---:|:---:|
@@ -64,21 +45,16 @@ https://github.com/user-attachments/assets/0840f496-575c-4ca6-83a8-87bb01a85c5f
 
 </div>
 
-> [!CAUTION]
-> This is my personal fork and it's **STILL WORK IN PROGRESS**.
->
-> I am still learning Quickshell and this is my first time working with it. I'm trying to learn and improve! 🚀
->
-> This repo is **ONLY for the desktop shell** of the Caelestia dots. For the default Caelestia dots, head to [the main repo](https://github.com/caelestia-dots/caelestia) instead.
-
-
+> [!NOTE]
+> This repo is **ONLY for the desktop shell** of the Caelestia dots for Niri. For the default Caelestia dots (Hyprland), head over to [the main Caelestia repo](https://github.com/caelestia-dots/caelestia).
 
 ---
 
-## ✨ My Changes
+## ✨ Features & Tweaks
 
-Based on [jutraim's niri-caelestia-shell](https://github.com/jutraim/niri-caelestia-shell) with these additions:
+Based on [AyushKr2003's niri-caelestia-shell](https://github.com/AyushKr2003/niri-caelestia-shell) and [jutraim](https://github.com/jutraim/niri-caelestia-shell):
 
+- **Core C++ Optimizations (In Progress)**: Offloading heavy background tasks and polling to native C++ Qt plugins for lower memory and CPU usage
 - **Config Editor**: Visual JSON editor with searchable icon/font pickers, array editing (battery warnings, idle timeouts), nested object support
 - **Battery Monitor**: Configurable warning notifications at custom levels with icons and messages
 - **Enhanced Workspace Bar**: Program icons, drag-to-reorder windows, context menus, app grouping
@@ -141,7 +117,7 @@ Then simply build and install using `cmake`.
 For a fully automated installation including all dependencies, system configuration, and building the shell:
 
 ```sh
-git clone https://github.com/Ayushkr2003/niri-caelestia-shell && cd niri-caelestia-shell && ./scripts/setup/v2/setup install
+git clone https://github.com/irrationalpi2008-bot/niri-caelestia-shell && cd niri-caelestia-shell && ./scripts/setup/v2/setup install
 ```
 
 > [!WARNING]
@@ -154,7 +130,7 @@ git clone https://github.com/Ayushkr2003/niri-caelestia-shell && cd niri-caelest
 
     ```sh
     cd ~/.config/quickshell
-    git clone https://github.com/Ayushkr2003/niri-caelestia-shell
+    git clone https://github.com/irrationalpi2008-bot/niri-caelestia-shell
     ```
 3. Build:
 
@@ -775,9 +751,10 @@ To set the wallpaper, you can use the app launcher command `> wallpaper`.
 
 ## 🙏 Credits
 
+* [AyushKr2003/niri-caelestia-shell](https://github.com/AyushKr2003/niri-caelestia-shell) – The original niri fork and awesome features this project builds upon
 * [Quickshell](https://github.com/quickshell/quickshell) – Core shell framework
 * [Caelestia](https://github.com/caelestia-shell/caelestia-shell) – Original project
-* [Niri-Caelestia-Shell](https://github.com/jutraim/niri-caelestia-shell) – Niri adaptation this fork is based on
+* [jutraim/niri-caelestia-shell](https://github.com/jutraim/niri-caelestia-shell) – Initial Niri adaptation
 * [end-4/dots-hyprland](https://github.com/end-4/dots-hyprland) – Many features and ideas inspired from
 * [Niri](https://github.com/YaLTeR/niri) – Window manager backend
 * All upstream contributors :)
@@ -786,4 +763,4 @@ To set the wallpaper, you can use the app launcher command `> wallpaper`.
 
 ## 📈 Useless chart
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Ayushkr2003/niri-caelestia-shell\&type=Date)](https://star-history.com/#Ayushkr2003/niri-caelestia-shell&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=irrationalpi2008-bot/niri-caelestia-shell\&type=Date)](https://star-history.com/#irrationalpi2008-bot/niri-caelestia-shell&Date)
