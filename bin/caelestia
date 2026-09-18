@@ -1,0 +1,372 @@
+#!/usr/bin/env bash
+# caelestia — Unified CLI & Management Suite for niri-caelestia-shell
+#
+# Commands:
+#   install     Automated installation of dependencies, venv, and plugins
+#   doctor      Check system health, dependencies, and QML plugin diagnostics
+#   update      Fetch updates, rebuild modified plugins, and re-sync venv
+#   repair      Automatically repair build artifacts, venv, and state
+#   status      Display active shell instance, PID, memory, and theming info
+#   theme       Change wallpaper, adjust theme flavor, or display scheme info
+#   switch      Quickly switch between Caelestia and your default/inir shell
+#   restart     Restart the active Caelestia shell process
+#   start       Launch Caelestia shell
+#   stop        Stop Caelestia shell
+#   uninstall   Safely clean up shell build artifacts and CLI symlink
+#
+# Run 'caelestia <command> --help' for details on any command.
+
+set -euo pipefail
+
+# --- ANSI Colors ---
+C_RESET='\033[0m'
+C_BOLD='\033[1m'
+C_DIM='\033[2m'
+C_RED='\033[31m'
+C_GREEN='\033[32m'
+C_YELLOW='\033[33m'
+C_BLUE='\033[34m'
+C_MAGENTA='\033[35m'
+C_CYAN='\033[36m'
+
+# --- Resolve Script & Repository Paths ---
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+    DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+    SOURCE="$(readlink "$SOURCE")"
+    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+BIN_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+REPO_ROOT="$(cd "$BIN_DIR/.." && pwd)"
+
+# Global State Paths
+STATE_CAELESTIA="$HOME/.local/state/caelestia"
+STATE_QUICKSHELL="$HOME/.local/state/quickshell"
+SWITCHER_SCRIPT="$HOME/shell-switcher/shell-switcher.sh"
+
+print_banner() {
+    echo -e "${C_MAGENTA}${C_BOLD}"
+    echo "  ╔═══════════════════════════════════════════════════════════════╗"
+    echo "  ║                  🌌 Caelestia Shell CLI                       ║"
+    echo "  ╚═══════════════════════════════════════════════════════════════╝"
+    echo -e "${C_RESET}"
+}
+
+print_help() {
+    print_banner
+    echo -e "${C_BOLD}Usage:${C_RESET} caelestia <command> [arguments...]"
+    echo ""
+    echo -e "${C_BOLD}Commands:${C_RESET}"
+    echo -e "  ${C_CYAN}install${C_RESET}     Run automated installer (deps, venv, C++ plugin)"
+    echo -e "  ${C_CYAN}doctor${C_RESET}      Inspect system health, diagnostics, and missing tools"
+    echo -e "  ${C_CYAN}update${C_RESET}      Pull git updates, conditionally rebuild plugins & reload"
+    echo -e "  ${C_CYAN}repair${C_RESET}      Run automated diagnostics repair (--fix)"
+    echo -e "  ${C_CYAN}status${C_RESET}      Show current shell state, PID, memory, and theme"
+    echo -e "  ${C_CYAN}theme${C_RESET}       Set wallpaper and regenerate dynamic Material You palette"
+    echo -e "  ${C_CYAN}switch${C_RESET}      Toggle between Caelestia and default shell"
+    echo -e "  ${C_CYAN}restart${C_RESET}     Restart running Caelestia shell instance"
+    echo -e "  ${C_CYAN}start${C_RESET}       Launch Caelestia shell"
+    echo -e "  ${C_CYAN}stop${C_RESET}        Terminate running Caelestia shell"
+    echo -e "  ${C_CYAN}uninstall${C_RESET}   Cleanly remove Caelestia build artifacts & symlink"
+    echo ""
+    echo -e "${C_BOLD}Options:${C_RESET}"
+    echo -e "  -v, --version   Show version and commit"
+    echo -e "  -h, --help      Show this help message"
+    echo ""
+    echo -e "${C_DIM}Repository: $REPO_ROOT${C_RESET}"
+}
+
+# --- Command Implementations ---
+
+cmd_install() {
+    exec "$REPO_ROOT/scripts/install/installer.sh" "$@"
+}
+
+cmd_doctor() {
+    exec "$REPO_ROOT/scripts/doctor/doctor.sh" "$@"
+}
+
+cmd_update() {
+    exec "$REPO_ROOT/scripts/update/update.sh" "$@"
+}
+
+cmd_repair() {
+    echo -e "${C_CYAN}[caelestia]${C_RESET} Running automated repair suite..."
+    exec "$REPO_ROOT/scripts/doctor/doctor.sh" --fix "$@"
+}
+
+cmd_status() {
+    print_banner
+    echo -e "${C_BLUE}${C_BOLD}── Shell Instance ──${C_RESET}"
+    local qs_pid
+    qs_pid=$(pgrep -f "qs.*$REPO_ROOT" 2>/dev/null | head -n1 || true)
+    if [[ -z "$qs_pid" ]]; then
+        qs_pid=$(pgrep -x "qs" 2>/dev/null | head -n1 || true)
+    fi
+    if [[ -z "$qs_pid" ]]; then
+        qs_pid=$(pgrep -x "quickshell" 2>/dev/null | head -n1 || true)
+    fi
+    
+    local active_tag="caelestia"
+    if [[ -f "$STATE_CAELESTIA/active_shell" ]]; then
+        active_tag=$(cat "$STATE_CAELESTIA/active_shell")
+    fi
+
+    if [[ -n "$qs_pid" ]]; then
+        local mem_kb mem_mb
+        mem_kb=$(awk '/VmRSS/{print $2}' "/proc/$qs_pid/status" 2>/dev/null || echo "0")
+        mem_mb=$(awk "BEGIN {printf \"%.1f\", $mem_kb / 1024}")
+        echo -e "  Status:         ${C_GREEN}${C_BOLD}Active / Running${C_RESET} (PID: $qs_pid)"
+        echo -e "  Memory RSS:     ${C_CYAN}${mem_mb} MB${C_RESET}"
+        echo -e "  Active Shell:   ${C_BOLD}${active_tag}${C_RESET}"
+    else
+        echo -e "  Status:         ${C_YELLOW}Inactive / Stopped${C_RESET}"
+        echo -e "  Last Active:    ${active_tag}"
+    fi
+
+    echo ""
+    echo -e "${C_BLUE}${C_BOLD}── Compositor & Display ──${C_RESET}"
+    echo -e "  Wayland:        ${WAYLAND_DISPLAY:-undetected}"
+    if command -v niri &>/dev/null; then
+        local niri_ver
+        niri_ver=$(niri --version 2>/dev/null || echo "installed")
+        echo -e "  Compositor:     ${C_GREEN}$niri_ver${C_RESET}"
+        if niri msg outputs &>/dev/null; then
+            local outputs
+            outputs=$(niri msg outputs 2>/dev/null | grep -E "Output" | wc -l || echo "1")
+            echo -e "  Outputs:        $outputs display(s) active"
+        fi
+    else
+        echo -e "  Compositor:     ${C_RED}Niri not found in PATH${C_RESET}"
+    fi
+
+    echo ""
+    echo -e "${C_BLUE}${C_BOLD}── Theming & Color State ──${C_RESET}"
+    local wall_path="None"
+    if [[ -f "$STATE_CAELESTIA/wallpaper/path.txt" ]]; then
+        wall_path=$(cat "$STATE_CAELESTIA/wallpaper/path.txt")
+    fi
+    echo -e "  Wallpaper:      ${wall_path}"
+    
+    local scheme_file="$STATE_CAELESTIA/scheme.json"
+    if [[ -f "$scheme_file" ]]; then
+        local color_count variant mode
+        variant=$(jq -r '.variant // "default"' "$scheme_file" 2>/dev/null || echo "default")
+        mode=$(jq -r '.mode // "dark"' "$scheme_file" 2>/dev/null || echo "dark")
+        color_count=$(jq '.colours | length' "$scheme_file" 2>/dev/null || grep -c '": "' "$scheme_file" || echo "available")
+        echo -e "  Scheme State:   ${C_GREEN}Active${C_RESET} ($variant, $mode mode, $color_count colors)"
+    else
+        echo -e "  Scheme State:   ${C_YELLOW}No scheme.json found${C_RESET}"
+    fi
+
+    echo ""
+    echo -e "${C_BLUE}${C_BOLD}── Plugins & Build ──${C_RESET}"
+    local plugin_bundle="$REPO_ROOT/build/qml/Caelestia/libcaelestiaplugin.so"
+    local plugin_lib="$REPO_ROOT/build/plugin/src/Caelestia/libcaelestia.so"
+    if [[ -f "$plugin_bundle" || -f "$plugin_lib" ]]; then
+        local target_file="$plugin_bundle"
+        [[ ! -f "$target_file" ]] && target_file="$plugin_lib"
+        local btime
+        btime=$(date -r "$target_file" "+%Y-%m-%d %H:%M:%S" 2>/dev/null || echo "present")
+        echo -e "  C++ Plugins:    ${C_GREEN}Compiled${C_RESET} ($btime)"
+    else
+        echo -e "  C++ Plugins:    ${C_RED}Missing / Uncompiled${C_RESET} (Run: caelestia repair)"
+    fi
+
+    local venv_py="$STATE_QUICKSHELL/.venv/bin/python"
+    if [[ -x "$venv_py" ]]; then
+        echo -e "  Python Venv:    ${C_GREEN}Configured${C_RESET} ($STATE_QUICKSHELL/.venv)"
+    else
+        echo -e "  Python Venv:    ${C_RED}Missing${C_RESET} (Run: caelestia repair)"
+    fi
+    echo ""
+}
+
+cmd_theme() {
+    local wall=""
+    local mode="dark"
+    local variant="scheme-tonal-spot"
+    local positional=()
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --mode)
+                mode="$2"
+                shift 2
+                ;;
+            --variant|--type)
+                variant="$2"
+                shift 2
+                ;;
+            -h|--help)
+                echo "Usage: caelestia theme [wallpaper_path] [--mode dark|light] [--variant <type>]"
+                echo ""
+                echo "Available variants:"
+                echo "  scheme-tonal-spot   (Default balanced Material You palette)"
+                echo "  scheme-vibrant      (High chroma vibrant accents)"
+                echo "  scheme-expressive   (Bold artistic color contrasts)"
+                echo "  scheme-rainbow      (Vivid colorful accents)"
+                echo "  scheme-fruit-salad  (Warm playful shades)"
+                echo "  scheme-monochrome   (Pure grayscale tones)"
+                echo "  scheme-neutral      (Calm neutral low saturation)"
+                echo "  scheme-fidelity     (High fidelity exact source hue)"
+                echo "  scheme-content      (Content-aware dynamic tones)"
+                exit 0
+                ;;
+            *)
+                positional+=("$1")
+                shift
+                ;;
+        esac
+    done
+
+    if [[ ${#positional[@]} -gt 0 ]]; then
+        wall="${positional[0]}"
+    fi
+
+    if [[ -z "$wall" ]]; then
+        if [[ -f "$STATE_CAELESTIA/wallpaper/path.txt" ]]; then
+            wall=$(cat "$STATE_CAELESTIA/wallpaper/path.txt")
+        fi
+    fi
+
+    if [[ -z "$wall" || ! -f "$wall" ]]; then
+        echo -e "${C_YELLOW}[caelestia]${C_RESET} No wallpaper specified or found."
+        echo "Usage: caelestia theme <image_path> [--mode dark|light] [--variant <type>]"
+        exit 1
+    fi
+
+    echo -e "${C_CYAN}[caelestia]${C_RESET} Applying wallpaper & regenerating theme..."
+    echo -e "  Image:   ${C_BOLD}$wall${C_RESET}"
+    echo -e "  Mode:    ${C_BOLD}$mode${C_RESET}"
+    echo -e "  Variant: ${C_BOLD}$variant${C_RESET}"
+    echo ""
+
+    bash "$REPO_ROOT/scripts/colors/switchwall.sh" --mode "$mode" --type "$variant" "$wall"
+    echo -e "${C_GREEN}[caelestia]${C_RESET} ${C_BOLD}✔${C_RESET} Theme updated successfully."
+}
+
+cmd_switch() {
+    local target="${1:-}"
+    if [[ ! -f "$SWITCHER_SCRIPT" ]]; then
+        echo -e "${C_RED}[caelestia]${C_RESET} Shell switcher script not found at $SWITCHER_SCRIPT."
+        exit 1
+    fi
+
+    if [[ -z "$target" ]]; then
+        # Check current shell and toggle
+        local cur="inir"
+        if [[ -f "$STATE_CAELESTIA/active_shell" ]]; then
+            cur=$(cat "$STATE_CAELESTIA/active_shell")
+        fi
+        if [[ "$cur" == "caelestia" ]]; then
+            target="inir"
+        else
+            target="caelestia"
+        fi
+    fi
+
+    echo -e "${C_CYAN}[caelestia]${C_RESET} Switching shell to: ${C_BOLD}$target${C_RESET}..."
+    bash "$SWITCHER_SCRIPT" "$target"
+    echo -e "${C_GREEN}[caelestia]${C_RESET} ${C_BOLD}✔${C_RESET} Switched to $target."
+}
+
+cmd_restart() {
+    echo -e "${C_CYAN}[caelestia]${C_RESET} Restarting Caelestia Shell..."
+    if [[ -f "$SWITCHER_SCRIPT" ]]; then
+        bash "$SWITCHER_SCRIPT" caelestia
+    else
+        pkill -f "quickshell.*shell\.qml" 2>/dev/null || true
+        sleep 0.5
+        qs -p "$REPO_ROOT/shell.qml" >/dev/null 2>&1 &
+        disown
+    fi
+    echo -e "${C_GREEN}[caelestia]${C_RESET} ${C_BOLD}✔${C_RESET} Restart command issued."
+}
+
+cmd_start() {
+    if pgrep -f "quickshell.*shell\.qml" &>/dev/null; then
+        echo -e "${C_YELLOW}[caelestia]${C_RESET} Caelestia Shell is already running."
+        exit 0
+    fi
+    cmd_switch caelestia
+}
+
+cmd_stop() {
+    echo -e "${C_CYAN}[caelestia]${C_RESET} Stopping Caelestia Shell..."
+    pkill -f "quickshell.*shell\.qml" 2>/dev/null || true
+    pkill -f "qs" 2>/dev/null || true
+    echo -e "${C_GREEN}[caelestia]${C_RESET} ${C_BOLD}✔${C_RESET} Shell stopped."
+}
+
+cmd_uninstall() {
+    print_banner
+    echo -e "${C_RED}${C_BOLD}WARNING: Caelestia Shell Clean Uninstall${C_RESET}"
+    echo "This will remove:"
+    echo "  - CLI symlink (~/.local/bin/caelestia)"
+    echo "  - C++ build artifacts ($REPO_ROOT/build)"
+    echo "  - Python virtual environment ($STATE_QUICKSHELL/.venv)"
+    echo "  - Caelestia state cache ($STATE_CAELESTIA)"
+    echo ""
+    echo -e "${C_GREEN}NOTE: Your personal Niri config (~/.config/niri) will NOT be touched.${C_RESET}"
+    echo ""
+    echo -n -e "${C_BOLD}Are you sure you want to proceed? (yes/N): ${C_RESET}"
+    read -r reply
+    if [[ "$reply" != "yes" ]]; then
+        echo "Aborted."
+        exit 0
+    fi
+
+    echo -e "${C_CYAN}[caelestia]${C_RESET} Stopping any running shells..."
+    pkill -f "quickshell.*shell\.qml" 2>/dev/null || true
+
+    echo -e "${C_CYAN}[caelestia]${C_RESET} Removing symlink..."
+    rm -f "$HOME/.local/bin/caelestia"
+
+    echo -e "${C_CYAN}[caelestia]${C_RESET} Cleaning build directory..."
+    rm -rf "$REPO_ROOT/build"
+
+    echo -e "${C_CYAN}[caelestia]${C_RESET} Cleaning Python venv..."
+    rm -rf "$STATE_QUICKSHELL/.venv"
+
+    echo -e "${C_CYAN}[caelestia]${C_RESET} Cleaning Caelestia state..."
+    rm -rf "$STATE_CAELESTIA"
+
+    echo -e "${C_GREEN}${C_BOLD}✔ Clean uninstall completed.${C_RESET}"
+}
+
+cmd_version() {
+    local commit
+    commit=$(git -C "$REPO_ROOT" rev-parse --short HEAD 2>/dev/null || echo "unknown")
+    echo "caelestia shell CLI (commit $commit)"
+}
+
+# --- Main Dispatcher ---
+if [[ $# -eq 0 ]]; then
+    print_help
+    exit 0
+fi
+
+SUBCOMMAND="$1"
+shift
+
+case "$SUBCOMMAND" in
+    install)    cmd_install "$@" ;;
+    doctor)     cmd_doctor "$@" ;;
+    update)     cmd_update "$@" ;;
+    repair)     cmd_repair "$@" ;;
+    status)     cmd_status "$@" ;;
+    theme)      cmd_theme "$@" ;;
+    switch)     cmd_switch "$@" ;;
+    restart)    cmd_restart "$@" ;;
+    start)      cmd_start "$@" ;;
+    stop)       cmd_stop "$@" ;;
+    uninstall)  cmd_uninstall "$@" ;;
+    -v|--version|version) cmd_version ;;
+    -h|--help|help)       print_help ;;
+    *)
+        echo -e "${C_RED}Unknown command:${C_RESET} $SUBCOMMAND"
+        echo "Run 'caelestia --help' for available commands."
+        exit 1
+        ;;
+esac

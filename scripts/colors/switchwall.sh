@@ -87,7 +87,12 @@ run_matugen_templates() {
         return
     fi
 
-    matugen image "$imgpath" --mode "$mode" --type "$scheme_type" --source-color-index 0 &>/dev/null &
+    local matugen_cfg="$SCRIPT_DIR/../../matugen.toml"
+    if [[ -f "$matugen_cfg" ]]; then
+        matugen --config "$matugen_cfg" image "$imgpath" --mode "$mode" --type "$scheme_type" --source-color-index 0 &>/dev/null &
+    else
+        matugen image "$imgpath" --mode "$mode" --type "$scheme_type" --source-color-index 0 &>/dev/null &
+    fi
 }
 
 # Post-processing: KDE/Dolphin colors + VS Code accent color
@@ -159,6 +164,8 @@ switch() {
     set_desktop_mode "$mode"
 
     # Build args for Python generate_colors_material.py
+    local caelestia_scheme="${XDG_STATE_HOME:-$HOME/.local/state}/caelestia/scheme.json"
+    mkdir -p "$(dirname "$caelestia_scheme")"
     local -a py_args=(
         --path "$actual_img"
         --mode "$mode"
@@ -166,6 +173,7 @@ switch() {
         --termscheme "$TERMINAL_SCHEME"
         --blend_bg_fg
         --cache "$GENERATED_DIR/color.txt"
+        --export-scheme "$caelestia_scheme"
     )
 
     # -- 2. Generate material_colors.scss via Python --

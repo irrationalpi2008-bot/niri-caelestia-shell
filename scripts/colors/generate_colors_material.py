@@ -24,6 +24,7 @@ parser.add_argument('--harmonize_threshold', type=float , default=100, help='(0-
 parser.add_argument('--term_fg_boost', type=float , default=0.35, help='Make terminal foreground more different from the background')
 parser.add_argument('--blend_bg_fg', action='store_true', default=False, help='Shift terminal background or foreground towards accent')
 parser.add_argument('--cache', type=str, default=None, help='file path to store the generated color')
+parser.add_argument('--export-scheme', type=str, default=None, help='export full scheme JSON for Quickshell/Caelestia')
 parser.add_argument('--debug', action='store_true', default=False, help='debug mode')
 args = parser.parse_args()
 
@@ -119,6 +120,17 @@ for color in vars(MaterialDynamicColors).keys():
         rgba = color_name.get_hct(scheme).to_rgba()
         material_colors[color] = rgba_to_hex(rgba)
 
+# Add snake_case aliases for key colors expected across shell scripts & SCSS
+for camel, snake in [
+    ('primaryPaletteKeyColor', 'primary_paletteKeyColor'),
+    ('secondaryPaletteKeyColor', 'secondary_paletteKeyColor'),
+    ('tertiaryPaletteKeyColor', 'tertiary_paletteKeyColor'),
+    ('neutralPaletteKeyColor', 'neutral_paletteKeyColor'),
+    ('neutralVariantPaletteKeyColor', 'neutral_variant_paletteKeyColor'),
+]:
+    if camel in material_colors:
+        material_colors[snake] = material_colors[camel]
+
 # Extended material
 if darkmode == True:
     material_colors['success'] = '#B5CCBA'
@@ -137,7 +149,8 @@ if args.termscheme is not None:
         json_termscheme = f.read()
     term_source_colors = json.loads(json_termscheme)['dark' if darkmode else 'light']
 
-    primary_color_argb = hex_to_argb(material_colors['primary_paletteKeyColor'])
+    primary_key = material_colors.get('primary_paletteKeyColor') or material_colors.get('primaryPaletteKeyColor') or material_colors.get('primary')
+    primary_color_argb = hex_to_argb(primary_key)
     for color, val in term_source_colors.items():
         if(args.scheme == 'monochrome') :
             term_colors[color] = val
@@ -158,6 +171,35 @@ if args.debug == False:
         print(f"${color}: {code};")
     for color, code in term_colors.items():
         print(f"${color}: {code};")
+
+if args.export_scheme is not None:
+    try:
+        import os
+        scheme_colours = {}
+        for color, code in material_colors.items():
+            scheme_colours[color] = code.lstrip('#')
+        for color, code in term_colors.items():
+            scheme_colours[color] = code.lstrip('#')
+
+        variant_name = args.scheme.replace('scheme-', '').replace('-', '')
+        if not variant_name:
+            variant_name = 'tonalspot'
+
+        state_data = {
+            "name": "dynamic",
+            "flavour": "default",
+            "mode": args.mode,
+            "variant": variant_name,
+            "colours": scheme_colours
+        }
+
+        scheme_path = os.path.abspath(os.path.expanduser(args.export_scheme))
+        os.makedirs(os.path.dirname(scheme_path), exist_ok=True)
+        with open(scheme_path, 'w') as f:
+            json.dump(state_data, f, indent=2)
+    except Exception as e:
+        import sys
+        print(f"Error exporting scheme to {args.export_scheme}: {e}", file=sys.stderr)
 else:
     if args.path is not None:
         print('\n--------------Image properties-----------------')

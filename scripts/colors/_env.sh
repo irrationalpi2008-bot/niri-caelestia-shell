@@ -10,6 +10,9 @@ QUICKSHELL_CONFIG_NAME="niri-caelestia-shell"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_DIR="$XDG_CONFIG_HOME/quickshell/$QUICKSHELL_CONFIG_NAME"
+if [[ ! -d "$CONFIG_DIR" ]]; then
+    CONFIG_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+fi
 CACHE_DIR="$XDG_CACHE_HOME/quickshell"
 STATE_DIR="$XDG_STATE_HOME/quickshell/user"
 SHELL_CONFIG_FILE="$CONFIG_DIR/shell.json"

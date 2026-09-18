@@ -12,7 +12,9 @@ term_alpha=$(config_get '.appearance.wallpaperTheming.terminalAlpha' '100')
 if [ ! -d "$GENERATED_DIR" ]; then
   mkdir -p "$GENERATED_DIR"
 fi
-cd "$CONFIG_DIR" || exit
+if [[ -d "$CONFIG_DIR" ]]; then
+  cd "$CONFIG_DIR" || true
+fi
 
 colornames=''
 colorstrings=''

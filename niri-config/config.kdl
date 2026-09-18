@@ -1,0 +1,430 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Niri Compositor Configuration — Caelestia Shell Profile
+// ─────────────────────────────────────────────────────────────────────────────
+// Default Caelestia configuration (startup, environment, general, input, output,
+// layout, animations, gestures, rules, colors) paired with your personal key bindings.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Startup Processes (Default Caelestia) ────────────────────────────────────
+spawn-sh-at-startup "dbus-update-activation-environment --systemd --all"
+spawn-sh-at-startup "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_ID"
+spawn-sh-at-startup "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP"
+spawn-at-startup "bash" "-c" "systemctl --user import-environment XDG_MENU_PREFIX && kbuildsycoca6"
+spawn-at-startup "bash" "-c" "wl-paste --type text --watch cliphist store &"
+spawn-at-startup "bash" "-c" "wl-paste --type image --watch cliphist store &"
+
+// ── General Settings (Default Caelestia) ─────────────────────────────────────
+config-notification {
+    disable-failed
+}
+
+screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
+
+hotkey-overlay {
+    skip-at-startup
+}
+
+prefer-no-csd
+
+debug {
+    honor-xdg-activation-with-invalid-serial
+}
+
+overview {
+    workspace-shadow {
+        off
+    }
+}
+
+// ── Environment Variables (Default Caelestia) ────────────────────────────────
+environment {
+    XDG_CURRENT_DESKTOP "niri"
+    XDG_SESSION_TYPE "wayland"
+    XDG_SESSION_DESKTOP "niri"
+    XDG_MENU_PREFIX "plasma-"
+    QT_QPA_PLATFORM "wayland"
+    ELECTRON_OZONE_PLATFORM_HINT "auto"
+    QT_QPA_PLATFORMTHEME "kde"
+    QT_STYLE_OVERRIDE "kvantum"
+    MOZ_ENABLE_WAYLAND "1"
+    SDL_VIDEODRIVER "wayland"
+}
+
+// ── Input Configuration (Default Caelestia) ──────────────────────────────────
+input {
+    focus-follows-mouse
+    keyboard {
+        xkb {
+            layout "us"
+        }
+        numlock
+        repeat-delay 250
+        repeat-rate 50
+    }
+    touchpad {
+        tap
+        natural-scroll
+    }
+}
+
+// ── Output Configuration (Default Caelestia adapted for display) ─────────────
+output "eDP-1" {
+    mode "1920x1080@144.003"
+    position x=0 y=0
+}
+
+// ── Layout Configuration (Default Caelestia) ─────────────────────────────────
+layout {
+    gaps 20
+    background-color "transparent"
+    center-focused-column "never"
+
+    preset-column-widths {
+        proportion 0.33333
+        proportion 0.5
+        proportion 0.66667
+        proportion 0.80
+        proportion 1.0
+    }
+
+    focus-ring {
+        off
+    }
+
+    border {
+        off
+    }
+
+    shadow {
+        off
+    }
+
+    tab-indicator {
+        active-color   "#ffb4a8"
+        inactive-color "#919191"
+        urgent-color   "#ffffff"
+    }
+
+    insert-hint {
+        color "#ffb4a880"
+    }
+}
+
+// ── Animations & Custom Shaders (Default Caelestia) ──────────────────────────
+animations {
+    // 1. Structural Movements: Critically damped for a snappy, zero-wobble QML feel
+    workspace-switch {
+        spring damping-ratio=1.0 stiffness=1000 epsilon=0.0001
+    }
+    horizontal-view-movement {
+        spring damping-ratio=1.0 stiffness=1000 epsilon=0.0001
+    }
+    window-movement {
+        spring damping-ratio=1.0 stiffness=1000 epsilon=0.0001
+    }
+    window-resize {
+        spring damping-ratio=1.0 stiffness=1000 epsilon=0.0001
+    }
+    overview-open-close {
+        spring damping-ratio=1.0 stiffness=850 epsilon=0.0001
+    }
+
+    // 2. Window Open: Rise up from below and fade in
+    window-open {
+        duration-ms 300
+        curve "ease-out-cubic"
+        custom-shader r"
+            vec4 open_color(vec3 coords_geo, vec3 size_geo) {
+                float progress = niri_clamped_progress;
+                float opacity = clamp(progress * 1.5, 0.0, 1.0);
+                float slide_distance = 0.05; 
+                float y_offset = (1.0 - progress) * slide_distance;
+                float scale = 0.95 + (0.05 * progress);
+                vec3 coords = vec3((coords_geo.xy - vec2(0.5, 1.0)) / scale + vec2(0.5, 1.0), 1.0);
+                coords.y -= y_offset;
+                vec3 coords_tex = niri_geo_to_tex * coords;
+                vec4 color = texture2D(niri_tex, coords_tex.st);
+                return color * opacity;
+            }
+        "
+    }
+
+    // 3. Window Close: Sink down below and dissolve
+    window-close {
+        duration-ms 200 
+        curve "ease-out-quad"
+        custom-shader r"
+            vec4 close_color(vec3 coords_geo, vec3 size_geo) {
+                float progress = 1.0 - niri_clamped_progress;
+                float opacity = progress;
+                float slide_distance = 0.05;
+                float y_offset = (1.0 - progress) * slide_distance;
+                float scale = 0.95 + (0.05 * progress);
+                vec3 coords = vec3((coords_geo.xy - vec2(0.5, 1.0)) / scale + vec2(0.5, 1.0), 1.0);
+                coords.y -= y_offset; 
+                vec3 coords_tex = niri_geo_to_tex * coords;
+                vec4 color = texture2D(niri_tex, coords_tex.st);
+                return color * opacity;
+            }
+        "
+    }
+
+    // 4. UI Overlays: Fast, simple transitions for system components
+    config-notification-open-close {
+        spring damping-ratio=0.95 stiffness=900 epsilon=0.001
+    }
+    screenshot-ui-open {
+        duration-ms 200
+        curve "ease-out-quad"
+    }
+}
+
+// ── Gestures (Default Caelestia) ─────────────────────────────────────────────
+gestures {
+    hot-corners {
+        off
+        top-right
+        bottom-right
+    }
+}
+
+// ── Window Rules (Default Caelestia) ─────────────────────────────────────────
+window-rule {
+    geometry-corner-radius 12
+    clip-to-geometry true
+    tiled-state true
+    draw-border-with-background false
+}
+
+window-rule {
+    match is-active=false
+    opacity 0.9
+}
+
+window-rule {
+    match app-id=r#"^(org\.wezfurlong\.wezterm|Alacritty|com\.mitchellh\.ghostty|kitty)$"#
+}
+
+window-rule {
+    match app-id=r#"^org\.gnome\."#
+    draw-border-with-background false
+    geometry-corner-radius 12
+    clip-to-geometry true
+}
+
+window-rule {
+    match app-id=r#"(?i)(gnome-control-center|pavucontrol|nm-connection-editor|kcm_.*|systemsettings)"#
+    default-column-width { proportion 0.5; }
+    open-floating false
+}
+
+window-rule {
+    match app-id=r#"(?i)(gnome-calculator|galculator|blueman-manager|org\.gnome\.nautilus|steam|xdg-desktop-portal|mpv|org\.quickshell)"#
+    open-floating true
+}
+
+window-rule {
+    match app-id=r#"(?i)(kcm_networkmanagement|kcm_bluetooth)"#
+    open-floating true
+}
+
+window-rule {
+    match app-id=r#"^(code|code-oss|vscodium|codium|code-insiders|visual-studio-code|com\.visualstudio\.code|com\.visualstudio\.code-oss)$"#
+    open-maximized true
+}
+
+window-rule {
+    match app-id=r#"(?i)(firefox|librewolf|waterfox|chrom(e|ium)|brave|edge|vivaldi|opera|epiphany|falkon|qutebrowser|torbrowser|zen)"#
+    match app-id=r#"(?i)(org\.mozilla\.firefox|com\.google\.chrome|com\.brave\.browser|org\.chromium\.chromium)"#
+    match app-id=r#".*Default$"#
+
+    draw-border-with-background false
+    open-maximized true
+}
+
+window-rule {
+    match app-id=r#"(?i)(firefox|chrom(e|ium)|brave)"# title="(?i)(Picture-in-Picture|PiP)"
+    match app-id=r#"(?i)(zoom|teams|discord)"#
+    open-floating true
+}
+
+window-rule {
+    match app-id="term_fl"
+    match app-id="kitty" title=r#"(?i)(fl_term|System Info)"#
+    default-column-width { proportion 0.50; }
+    default-window-height { proportion 0.50; }
+    open-floating true
+    open-maximized-to-edges false
+}
+
+// ── Caelestia Shell Layer Rules ─────────────────────────────────────────────
+layer-rule {
+    match namespace="quickshell:Backdrop"
+    place-within-backdrop true
+    opacity 1.0
+}
+
+// ── Key Bindings (User Custom Bindings) ──────────────────────────────────────
+binds {
+    // ═══════════════════════════════════════════════════════════════════════
+    // Session & Compositor
+    // ═══════════════════════════════════════════════════════════════════════
+    Mod+A repeat=false { toggle-overview; }
+    Mod+Shift+O { power-off-monitors; }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Caelestia Shell Overlays & Tools
+    // ═══════════════════════════════════════════════════════════════════════
+    // App Launcher
+    Mod+Space repeat=false { spawn-sh "qs -p /home/irrational_pi/ME/Programming/projects/niri-caelestia-shell ipc call drawers toggle launcher"; }
+
+    // Clipboard History
+    Mod+C repeat=false { spawn-sh "qs -p /home/irrational_pi/ME/Programming/projects/niri-caelestia-shell ipc call clipboard open"; }
+
+    // Lock Screen
+    Mod+L allow-when-locked=true { spawn-sh "qs -p /home/irrational_pi/ME/Programming/projects/niri-caelestia-shell ipc call lock lock"; }
+
+    // Control Center & Settings
+    Mod+I { spawn-sh "qs -p /home/irrational_pi/ME/Programming/projects/niri-caelestia-shell ipc call controlCenter open"; }
+    Mod+Comma { spawn-sh "qs -p /home/irrational_pi/ME/Programming/projects/niri-caelestia-shell ipc call controlCenter open"; }
+
+    // Dashboard & Quick Toggles
+    Mod+D { spawn-sh "qs -p /home/irrational_pi/ME/Programming/projects/niri-caelestia-shell ipc call drawers toggle dashboard"; }
+    Mod+N { spawn-sh "qs -p /home/irrational_pi/ME/Programming/projects/niri-caelestia-shell ipc call quicktoggles toggle"; }
+
+    // Session / Power Menu
+    Mod+Escape { spawn-sh "qs -p /home/irrational_pi/ME/Programming/projects/niri-caelestia-shell ipc call drawers toggle session"; }
+    Ctrl+Alt+Delete { spawn-sh "qs -p /home/irrational_pi/ME/Programming/projects/niri-caelestia-shell ipc call drawers toggle session"; }
+
+    // Region Select / Screenshot / OCR / Search (Area Picker)
+    Mod+S { spawn-sh "qs -p /home/irrational_pi/ME/Programming/projects/niri-caelestia-shell ipc call picker openFreeze"; }
+    Mod+Shift+S { spawn-sh "qs -p /home/irrational_pi/ME/Programming/projects/niri-caelestia-shell ipc call picker openFreeze"; }
+    Mod+Shift+X { spawn-sh "qs -p /home/irrational_pi/ME/Programming/projects/niri-caelestia-shell ipc call picker regionOcr"; }
+    Mod+Shift+A { spawn-sh "qs -p /home/irrational_pi/ME/Programming/projects/niri-caelestia-shell ipc call picker regionSearch"; }
+
+    // Manga & Novel Readers
+    Mod+Shift+R { spawn-sh "qs -p /home/irrational_pi/ME/Programming/projects/niri-caelestia-shell ipc call mangaReader toggle"; }
+    Mod+Shift+N { spawn-sh "qs -p /home/irrational_pi/ME/Programming/projects/niri-caelestia-shell ipc call novelReader toggle"; }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Personal Application Launchers
+    // ═══════════════════════════════════════════════════════════════════════
+    Mod+T { spawn "kitty"; }
+    Mod+E { spawn "nautilus"; }
+    Mod+B { spawn "zen-browser"; }
+    Mod+M { spawn "pear-desktop"; }
+    Mod+V { spawn "code"; }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Window Management
+    // ═══════════════════════════════════════════════════════════════════════
+    Mod+Q repeat=false { close-window; }
+    Mod+F { fullscreen-window; }
+    Mod+Shift+V { switch-focus-between-floating-and-tiling; }
+
+    // Preset column widths & manual resizing
+    Mod+R { switch-preset-column-width; }
+    Mod+Minus { set-column-width "-10%"; }
+    Mod+Equal { set-column-width "+10%"; }
+    Mod+Shift+Minus { set-window-height "-10%"; }
+    Mod+Shift+Equal { set-window-height "+10%"; }
+
+    // Column grouping
+    Mod+BracketLeft  { consume-or-expel-window-left; }
+    Mod+BracketRight { consume-or-expel-window-right; }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Focus Navigation
+    // ═══════════════════════════════════════════════════════════════════════
+    Mod+Left  { focus-column-left; }
+    Mod+Right { focus-column-right; }
+    Mod+Up    { focus-workspace-up; }
+    Mod+Down  { focus-workspace-down; }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Move Windows
+    // ═══════════════════════════════════════════════════════════════════════
+    Mod+Shift+Left  { move-column-left; }
+    Mod+Shift+Right { move-column-right; }
+    Mod+Shift+Up    { move-column-to-workspace-up; }
+    Mod+Shift+Down  { move-column-to-workspace-down; }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Multi-Monitor
+    // ═══════════════════════════════════════════════════════════════════════
+    Mod+Ctrl+Left  { focus-monitor-left; }
+    Mod+Ctrl+Right { focus-monitor-right; }
+    Mod+Ctrl+Up    { focus-monitor-up; }
+    Mod+Ctrl+Down  { focus-monitor-down; }
+
+    Mod+Ctrl+Shift+Left  { move-column-to-monitor-left; }
+    Mod+Ctrl+Shift+Right { move-column-to-monitor-right; }
+    Mod+Ctrl+Shift+Up    { move-column-to-monitor-up; }
+    Mod+Ctrl+Shift+Down  { move-column-to-monitor-down; }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Workspaces
+    // ═══════════════════════════════════════════════════════════════════════
+    Mod+1 { focus-workspace 1; }
+    Mod+2 { focus-workspace 2; }
+    Mod+3 { focus-workspace 3; }
+    Mod+4 { focus-workspace 4; }
+    Mod+5 { focus-workspace 5; }
+    Mod+6 { focus-workspace 6; }
+    Mod+7 { focus-workspace 7; }
+    Mod+8 { focus-workspace 8; }
+    Mod+9 { focus-workspace 9; }
+
+    Mod+Ctrl+1 { move-column-to-workspace 1; }
+    Mod+Ctrl+2 { move-column-to-workspace 2; }
+    Mod+Ctrl+3 { move-column-to-workspace 3; }
+    Mod+Ctrl+4 { move-column-to-workspace 4; }
+    Mod+Ctrl+5 { move-column-to-workspace 5; }
+    Mod+Ctrl+6 { move-column-to-workspace 6; }
+    Mod+Ctrl+7 { move-column-to-workspace 7; }
+    Mod+Ctrl+8 { move-column-to-workspace 8; }
+    Mod+Ctrl+9 { move-column-to-workspace 9; }
+
+    // Mouse wheel workspace & column navigation
+    Mod+WheelScrollDown            cooldown-ms=20 { focus-column-right; }
+    Mod+WheelScrollUp              cooldown-ms=20 { focus-column-left; }
+    Mod+Shift+WheelScrollDown      cooldown-ms=20 { focus-workspace-down; }
+    Mod+Shift+WheelScrollUp        cooldown-ms=20 { focus-workspace-up; }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Screenshots (Native)
+    // ═══════════════════════════════════════════════════════════════════════
+    Print      { screenshot; }
+    Ctrl+Print { screenshot-screen; }
+    Alt+Print  { screenshot-window; }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Hardware Keys
+    // ═══════════════════════════════════════════════════════════════════════
+    // Volume
+    XF86AudioRaiseVolume allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SINK@ 0; wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"; }
+    XF86AudioLowerVolume allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SINK@ 0; wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"; }
+    XF86AudioMute        allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"; }
+    XF86AudioMicMute     allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"; }
+
+    // Brightness (routed through Caelestia)
+    XF86MonBrightnessUp   allow-when-locked=true { spawn-sh "qs -p /home/irrational_pi/ME/Programming/projects/niri-caelestia-shell ipc call brightness set +5%"; }
+    XF86MonBrightnessDown allow-when-locked=true { spawn-sh "qs -p /home/irrational_pi/ME/Programming/projects/niri-caelestia-shell ipc call brightness set 5%-"; }
+
+    // Media
+    XF86AudioPlay  { spawn "playerctl" "play-pause"; }
+    XF86AudioPause { spawn "playerctl" "play-pause"; }
+    XF86AudioNext  { spawn "playerctl" "next"; }
+    XF86AudioPrev  { spawn "playerctl" "previous"; }
+
+    Ctrl+Mod+Space { spawn "playerctl" "play-pause"; }
+    Mod+Alt+N      { spawn "playerctl" "next"; }
+    Mod+Alt+P      { spawn "playerctl" "previous"; }
+}
+
+recent-windows {
+    binds {
+        Super+Tab { next-window; }
+        Super+Shift+Tab { previous-window; }
+    }
+}

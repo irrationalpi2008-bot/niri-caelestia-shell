@@ -39,24 +39,10 @@ CollapsibleSection {
                     function onClicked(): void {
                         const name = modelData.name;
                         const flavour = modelData.flavour;
-                        const schemeKey = `${name} ${flavour}`;
-
-                        Schemes.currentScheme = schemeKey;
-                        Quickshell.execDetached(["caelestia", "scheme", "set", "-n", name, "-f", flavour]);
-
-                        Qt.callLater(() => {
-                            reloadTimer.restart();
-                        });
+                        Schemes.setScheme(name, flavour);
                     }
                 }
 
-                Timer {
-                    id: reloadTimer
-                    interval: 300
-                    onTriggered: {
-                        Schemes.reload();
-                    }
-                }
 
                 RowLayout {
                     id: schemeRow

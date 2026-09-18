@@ -16,7 +16,6 @@ https://github.com/user-attachments/assets/0840f496-575c-4ca6-83a8-87bb01a85c5f
 
 </div>
 
-
 <div align=center> <h2> Screenshots (OLD)</h2>
 
 | App Launcher | Clipboard |
@@ -97,19 +96,43 @@ Then simply build and install using `cmake`.
 
 ---
 
-## ⚡ Installation
+## ⚡ Installation & CLI Suite
 
+### Automated One-Command Installation (Arch Linux)
 
-### Single Command Installation (Arch Linux)
-
-For a fully automated installation including all dependencies, system configuration, and building the shell:
+For a fully automated setup (system & AUR dependencies, Python venv for Material You theming, native C++ QML plugin compilation, initial palette generation, and the `caelestia` CLI suite):
 
 ```sh
-git clone https://github.com/irrationalpi2008-bot/niri-caelestia-shell && cd niri-caelestia-shell && ./scripts/setup/v2/setup install
+git clone https://github.com/irrationalpi2008-bot/niri-caelestia-shell
+cd niri-caelestia-shell
+./install.sh
 ```
 
-> [!WARNING]
-> This automated installer is currently in beta and may contain bugs. I am still working on refining the process! If you encounter issues, please use the Manual Build steps below.
+> [!TIP]
+> The automated installer is completely non-destructive: your personal Niri configuration (`~/.config/niri/config.kdl`) is left untouched!
+
+---
+
+### 🛠 The `caelestia` CLI Suite
+
+Once installed, the unified `caelestia` command is available in your PATH:
+
+```sh
+# System health check & diagnostic doctor
+caelestia doctor
+caelestia doctor --fix    # or: caelestia repair
+
+# Keep your shell up-to-date
+caelestia update          # Git pull, auto-recompile C++ plugins if needed, and reload
+caelestia update --check  # Check if new commits exist upstream without applying
+
+# Shell state & monitoring
+caelestia status          # Inspect active shell, PID, memory, compositor, and theme palette
+caelestia switch          # Toggle between Caelestia and your default/inir shell
+
+# Live Dynamic Material You Theming
+caelestia theme ~/Pictures/wall.jpg --mode dark --variant scheme-vibrant
+```
 
 ### Manual Build
 

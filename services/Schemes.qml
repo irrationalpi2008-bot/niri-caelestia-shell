@@ -9,8 +9,8 @@ import QtQuick
 Searcher {
     id: root
 
-    property string currentScheme
-    property string currentVariant
+    property string currentScheme: "dynamic default"
+    property string currentVariant: "tonalspot"
 
     // Path to the schemes data JSON file (bundled with the shell)
     readonly property string schemesDataPath: Qt.resolvedUrl("scheme.json")
@@ -202,8 +202,11 @@ Searcher {
                 root.currentVariant = state.variant || "tonalspot";
             } catch (e) {
                 // State file doesn't exist or is invalid, use defaults
-                root.currentScheme = "catppuccin mocha";
+                root.currentScheme = "dynamic default";
                 root.currentVariant = "tonalspot";
+                Qt.callLater(() => {
+                    root.regenerateDynamic();
+                });
             }
         }
 
@@ -265,7 +268,8 @@ Searcher {
             }
 
             const colorSource = Wallpapers.getColorSource(wallpaper);
-            command = ["matugen", "image", colorSource, "--dry-run", "--json", "hex", "--mode", mode, "--type", matugenType, "--source-color-index", "0"];
+            const configPath = Qt.resolvedUrl("../matugen.toml").toString().replace("file://", "");
+            command = ["matugen", "--config", configPath, "image", colorSource, "--dry-run", "--json", "hex", "--mode", mode, "--type", matugenType, "--source-color-index", "0"];
             
             // If it's a video and the frame might not exist yet, we should check/retry
             if (Wallpapers.isPathVideo(wallpaper)) {
