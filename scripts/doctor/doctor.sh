@@ -185,7 +185,7 @@ check_quickshell() {
         mem=$(ps -o rss= -p "$running_pid" 2>/dev/null | awk '{printf "%.1f MB", $1/1024}' || echo "")
         report_ok "Running Instance" "Active PID $running_pid${mem:+, memory: $mem}"
     else
-        report_warn "Running Instance" "Caelestia Shell is not currently active" "Run 'switch-shell caelestia' to start"
+        report_warn "Running Instance" "Caelestia Shell is not currently active" "Run 'caelestia start' to start"
     fi
 }
 

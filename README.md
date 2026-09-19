@@ -56,7 +56,6 @@ Based on the Niri port by AyushKr2003 and jutraim, with native C++ optimizations
 - **Workspace Bar**: Application icons, drag-to-reorder columns, context menus, window grouping, and active window indicators.
 - **System Monitor**: Real-time CPU, GPU (AMD/NVIDIA), and Memory resource monitoring with live graphs and network bandwidth tracking.
 - **Built-in Readers**: Lazy-loaded Manga and Light Novel reader drawers.
-- **Shell Switcher**: Toggle between Caelestia Shell and your default/inir shell without losing your session.
 
 ---
 
@@ -140,7 +139,6 @@ caelestia <command> [arguments...]
 | `caelestia start` | Launch Caelestia shell |
 | `caelestia stop` | Gracefully terminate running shell instances |
 | `caelestia restart` (or `reload`) | Restart the active Caelestia shell process |
-| `caelestia switch [caelestia\|inir]` | Instantly toggle between Caelestia and your default/inir shell |
 | `caelestia log` | Stream live Quickshell logs in real time |
 | `caelestia uninstall` | Safely clean up build artifacts, venv, state cache, and symlinks |
 

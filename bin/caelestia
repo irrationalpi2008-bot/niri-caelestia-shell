@@ -57,7 +57,6 @@ REPO_ROOT="$(cd "$BIN_DIR/.." && pwd)"
 # Global State Paths
 STATE_CAELESTIA="$HOME/.local/state/caelestia"
 STATE_QUICKSHELL="$HOME/.local/state/quickshell"
-SWITCHER_SCRIPT="$HOME/shell-switcher/shell-switcher.sh"
 
 print_banner() {
     echo -e "${C_MAGENTA}${C_BOLD}"
@@ -77,7 +76,6 @@ print_help() {
     echo -e "  ${C_CYAN}update${C_RESET}         Pull git updates, rebuild plugins & reload"
     echo -e "  ${C_CYAN}repair${C_RESET}         Run automated diagnostics repair (--fix)"
     echo -e "  ${C_CYAN}status${C_RESET}         Show current shell state, PID, memory, and theme"
-    echo -e "  ${C_CYAN}switch${C_RESET}         Toggle between Caelestia and default shell"
     echo -e "  ${C_CYAN}start${C_RESET}          Launch Caelestia shell"
     echo -e "  ${C_CYAN}stop${C_RESET}           Terminate running Caelestia shell"
     echo -e "  ${C_CYAN}restart${C_RESET}        Restart running Caelestia shell instance"
@@ -317,50 +315,25 @@ cmd_theme() {
     echo -e "${C_GREEN}[caelestia]${C_RESET} ${C_BOLD}✔${C_RESET} Theme updated successfully."
 }
 
-cmd_switch() {
-    local target="${1:-}"
-    if [[ ! -f "$SWITCHER_SCRIPT" ]]; then
-        echo -e "${C_RED}[caelestia]${C_RESET} Shell switcher script not found at $SWITCHER_SCRIPT."
-        exit 1
-    fi
-
-    if [[ -z "$target" ]]; then
-        local cur="inir"
-        if [[ -f "$STATE_CAELESTIA/active_shell" ]]; then
-            cur=$(cat "$STATE_CAELESTIA/active_shell")
-        fi
-        if [[ "$cur" == "caelestia" ]]; then
-            target="inir"
-        else
-            target="caelestia"
-        fi
-    fi
-
-    echo -e "${C_CYAN}[caelestia]${C_RESET} Switching shell to: ${C_BOLD}$target${C_RESET}..."
-    bash "$SWITCHER_SCRIPT" "$target"
-    echo -e "${C_GREEN}[caelestia]${C_RESET} ${C_BOLD}✔${C_RESET} Switched to $target."
-}
-
 cmd_restart() {
     echo -e "${C_CYAN}[caelestia]${C_RESET} Restarting Caelestia Shell..."
-    if [[ -f "$SWITCHER_SCRIPT" ]]; then
-        bash "$SWITCHER_SCRIPT" caelestia
-    else
-        pkill -f "quickshell.*shell\.qml" 2>/dev/null || true
-        pkill -f "qs" 2>/dev/null || true
-        sleep 0.5
-        qs -p "$REPO_ROOT/shell.qml" >/dev/null 2>&1 &
-        disown
-    fi
+    pkill -f "quickshell.*shell\.qml" 2>/dev/null || true
+    pkill -f "qs.*$REPO_ROOT" 2>/dev/null || true
+    sleep 0.5
+    qs -p "$REPO_ROOT/shell.qml" >/dev/null 2>&1 &
+    disown
     echo -e "${C_GREEN}[caelestia]${C_RESET} ${C_BOLD}✔${C_RESET} Restart command issued."
 }
 
 cmd_start() {
-    if pgrep -f "quickshell.*shell\.qml" &>/dev/null; then
+    if pgrep -f "quickshell.*shell\.qml" &>/dev/null || pgrep -f "qs.*$REPO_ROOT" &>/dev/null; then
         echo -e "${C_YELLOW}[caelestia]${C_RESET} Caelestia Shell is already running."
         exit 0
     fi
-    cmd_switch caelestia
+    echo -e "${C_CYAN}[caelestia]${C_RESET} Starting Caelestia Shell..."
+    qs -p "$REPO_ROOT/shell.qml" >/dev/null 2>&1 &
+    disown
+    echo -e "${C_GREEN}[caelestia]${C_RESET} ${C_BOLD}✔${C_RESET} Shell started."
 }
 
 cmd_stop() {
@@ -572,7 +545,6 @@ case "$SUBCOMMAND" in
     repair)         cmd_repair "$@" ;;
     status)         cmd_status "$@" ;;
     theme)          cmd_theme "$@" ;;
-    switch)         cmd_switch "$@" ;;
     restart|reload) cmd_restart "$@" ;;
     start)          cmd_start "$@" ;;
     stop)           cmd_stop "$@" ;;

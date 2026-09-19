@@ -301,22 +301,13 @@ if [[ "$NO_RESTART" == false ]]; then
     if [[ -n "$CAELESTIA_PID" ]]; then
         info "Active Caelestia Shell instance detected (PID $CAELESTIA_PID)."
         
-        # Check if shell-switcher exists
-        SWITCHER_SCRIPT="$HOME/shell-switcher/shell-switcher.sh"
-        if [[ -x "$SWITCHER_SCRIPT" ]]; then
-            info "Restarting Caelestia Shell via shell-switcher..."
-            "$SWITCHER_SCRIPT" caelestia >/dev/null 2>&1 &
-            sleep 1
-            ok "Caelestia Shell refreshed with new code."
-        else
-            info "Sending reload signal to Quickshell process..."
-            kill -TERM "$CAELESTIA_PID" 2>/dev/null || true
-            sleep 1
-            if command -v qs &>/dev/null; then
-                qs -p "$REPO_ROOT/shell.qml" >/dev/null 2>&1 &
-                disown
-                ok "Caelestia Shell restarted."
-            fi
+        info "Sending reload signal to Quickshell process..."
+        kill -TERM "$CAELESTIA_PID" 2>/dev/null || true
+        sleep 1
+        if command -v qs &>/dev/null; then
+            qs -p "$REPO_ROOT/shell.qml" >/dev/null 2>&1 &
+            disown
+            ok "Caelestia Shell restarted."
         fi
     else
         info "Caelestia Shell is not currently active. No restart needed."

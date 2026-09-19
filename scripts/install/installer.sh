@@ -6,7 +6,7 @@
 #   - Python virtual environment setup with uv/pip & Material You pipeline
 #   - Native C++ QML plugin compilation (CMake + Ninja)
 #   - State directory initialization & initial wallpaper color scheme generation
-#   - Shell switcher & CLI binary installation (~/.local/bin/caelestia)
+#   - CLI binary installation (~/.local/bin/caelestia)
 #   - System health diagnosis via Doctor
 #   - Zero disruption to existing personal Niri configs
 #
@@ -262,63 +262,8 @@ else
     info "No sample wallpaper found. Created empty state; wallpaper selection can be configured later."
 fi
 
-# --- Step 5: Shell Switcher Integration ---
-step 5 "Shell Switcher & Compositor Config"
-
-SWITCHER_DIR="$HOME/shell-switcher"
-if [[ -f "$SWITCHER_DIR/shell-switcher.sh" ]]; then
-    info "Preserving user shell switcher at $SWITCHER_DIR/shell-switcher.sh"
-    chmod +x "$SWITCHER_DIR/shell-switcher.sh"
-    ok "Shell switcher ready."
-else
-    info "Setting up shell switcher helper in $SWITCHER_DIR..."
-    mkdir -p "$SWITCHER_DIR"
-    cat << SWITCHOVER > "$SWITCHER_DIR/shell-switcher.sh"
-#!/usr/bin/env bash
-# Shell Switcher for Niri
-set -euo pipefail
-
-CHOICE="\${1:-}"
-CAELESTIA_DIR="$REPO_ROOT"
-
-kill_shells() {
-    pkill -f "quickshell" 2>/dev/null || true
-    pkill -f "qs" 2>/dev/null || true
-    sleep 0.5
-}
-
-switch_to_caelestia() {
-    kill_shells
-    if command -v niri &>/dev/null; then
-        niri msg action set-config-path "$CAELESTIA_DIR/niri-config/config.kdl" 2>/dev/null || true
-    fi
-    qs -p "$CAELESTIA_DIR/shell.qml" >/dev/null 2>&1 &
-    disown
-    echo "caelestia" > "$HOME/.local/state/caelestia/active_shell"
-}
-
-switch_to_inir() {
-    kill_shells
-    if command -v niri &>/dev/null; then
-        niri msg action set-config-path "$HOME/.config/niri/config.kdl" 2>/dev/null || true
-    fi
-    qs -p "$HOME/.config/quickshell/inir/shell.qml" >/dev/null 2>&1 &
-    disown
-    echo "inir" > "$HOME/.local/state/caelestia/active_shell"
-}
-
-case "$CHOICE" in
-    caelestia) switch_to_caelestia ;;
-    inir) switch_to_inir ;;
-    *)
-        echo "Usage: shell-switcher.sh [caelestia|inir]"
-        exit 1
-        ;;
-esac
-SWITCHOVER
-    chmod +x "$SWITCHER_DIR/shell-switcher.sh"
-    ok "Created shell switcher helper in $SWITCHER_DIR/shell-switcher.sh"
-fi
+# --- Step 5: Compositor Config Safety ---
+step 5 "Compositor Config Safety"
 
 # Ensure personal config is NEVER touched
 ok "Personal config safety: ~/.config/niri/config.kdl left untouched."
@@ -365,7 +310,6 @@ echo -e "  • ${C_CYAN}caelestia launcher${C_RESET}        — Toggle applicati
 echo -e "  • ${C_CYAN}caelestia controlcenter${C_RESET}   — Open Control Center visual settings"
 echo -e "  • ${C_CYAN}caelestia clipboard${C_RESET}       — Toggle clipboard history drawer or wipe history"
 echo -e "  • ${C_CYAN}caelestia capture [mode]${C_RESET}  — Region screenshot, OCR text extraction, Google Lens"
-echo -e "  • ${C_CYAN}caelestia switch${C_RESET}          — Seamlessly toggle between Caelestia and default shell"
 echo -e "  • ${C_CYAN}caelestia media${C_RESET}           — Control media drawer and playback"
 echo -e "  • ${C_CYAN}caelestia dnd / lock${C_RESET}      — Toggle Do Not Disturb or trigger screen lock"
 echo -e "  • ${C_CYAN}caelestia --help${C_RESET}          — View all available commands"
