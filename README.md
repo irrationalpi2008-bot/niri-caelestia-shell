@@ -35,30 +35,6 @@ https://github.com/user-attachments/assets/0840f496-575c-4ca6-83a8-87bb01a85c5f
 > [!NOTE]
 > This repo is **ONLY for the desktop shell** of the Caelestia dots for Niri. For the default Caelestia dots (Hyprland), head over to [the main Caelestia repo](https://github.com/caelestia-dots/caelestia).
 
----
-
-## Features
-
-Based on the Niri port by AyushKr2003 and jutraim, with native C++ optimizations and a unified CLI suite:
-
-- **Core C++ Engine & Performance Optimizations**:
-  - **Native Fuzzy Search**: Instant, zero-latency application filtering in `AppDb` and `CUtils` without JavaScript garbage collection pauses.
-  - **In-Process Telemetry**: `/proc/cpuinfo` and `/proc/net/dev` parsed directly in C++ (`SysMonitor`), calculating CPU percentages, network download/upload rates, and sparkline history buffers in native code.
-  - **Zero-Process Brightness**: Direct `/sys/class/backlight` sysfs reading, eliminating shell spawns (`brightnessctl`).
-  - **Dynamic GPU Layer Gating**: MultiEffect shadow/blur shaders and background curves dynamically deactivate when drawers are closed, eliminating idle GPU compute.
-  - **On-Demand Drawer Loading**: Heavy components like the Manga and Novel readers are wrapped in lazy `Loader` components to keep idle RAM minimal.
-- **Unified `caelestia` CLI Suite**: Single-command control for shell functions—including launchers, screen capture, OCR, clipboard, doctor diagnostics, and updates.
-- **Automated Installer**: Non-destructive installer that resolves dependencies, configures a dedicated Python venv for Material You color generation, builds C++ plugins, and verifies installation health.
-- **Dynamic Material You Theming**: Live wallpaper-driven palette generation powered by `python-materialyoucolor` with 9 scheme variants, light/dark modes, and cross-app sync.
-- **Screen Capture & AI Tools**: Integrated area picker for region screenshots (with Swappy editor), OCR text extraction via Tesseract, and Google Lens visual search.
-- **Integrated Clipboard Manager**: Built-in clipboard history drawer backed by `cliphist` and `wl-clipboard`, with quick clear capabilities.
-- **Control Center & Configuration**: Graphical settings window for appearance, fonts, themes, scaling, transparency, audio, and bluetooth, paired with structured JSON configuration (`~/.config/niri_caelestia/shell.json`).
-- **Battery Monitor**: Warning notifications at configurable battery thresholds with icons, critical levels, and auto-hibernation protection.
-- **Workspace Bar**: Application icons, drag-to-reorder columns, context menus, window grouping, and active window indicators.
-- **System Monitor**: Real-time CPU, GPU (AMD/NVIDIA), and Memory resource monitoring with live graphs and network bandwidth tracking.
-- **Built-in Readers**: Lazy-loaded Manga and Light Novel reader drawers.
-
----
 
 ## 📦 Dependencies
 
@@ -122,7 +98,7 @@ The `caelestia` command is automatically symlinked into `~/.local/bin/caelestia`
 caelestia <command> [arguments...]
 ```
 
-### 1. Lifecycle, Health & Maintenance
+### Lifecycle, Health & Maintenance
 | Command | Description |
 | :--- | :--- |
 | `caelestia doctor` | Inspect system health, dependencies, Python venv, and C++ plugin compilation |
@@ -135,57 +111,7 @@ caelestia <command> [arguments...]
 | `caelestia log` | Stream live Quickshell logs in real time |
 | `caelestia uninstall` | Safely clean up build artifacts, venv, state cache, and symlinks |
 
-### 2. Live Dynamic Theming (Material You)
-| Command | Description |
-| :--- | :--- |
-| `caelestia theme <image_path>` | Set new wallpaper and regenerate full system Material You color scheme |
-| `caelestia theme <image> --mode <dark\|light>` | Set theme lightness mode (dark or light) |
-| `caelestia theme <image> --variant <type>` | Choose Material 3 palette variant |
-| `caelestia theme get` | Print the path of the currently active wallpaper |
-| `caelestia theme list` | List available wallpapers in your wallpapers directory |
 
-> **Available Palette Variants**: `scheme-tonal-spot` (default), `scheme-vibrant`, `scheme-expressive`, `scheme-rainbow`, `scheme-fruit-salad`, `scheme-monochrome`, `scheme-neutral`, `scheme-fidelity`, `scheme-content`.
-
-### 3. Drawers & Navigation
-| Command | Description |
-| :--- | :--- |
-| `caelestia launcher` | Toggle application launcher drawer (with native C++ fuzzy search) |
-| `caelestia controlcenter` (or `cc`) | Open the Control Center settings window |
-| `caelestia quicktoggles` (or `qt`) | Toggle the Quick Toggles panel |
-| `caelestia session` | Toggle the session / power menu drawer |
-| `caelestia overview` | Toggle the workspace overview drawer |
-| `caelestia manga` | Toggle the built-in Manga Reader drawer |
-| `caelestia novel` | Toggle the built-in Light Novel Reader drawer |
-| `caelestia drawer <name>` | Toggle any drawer by name (`launcher`, `session`, `media`, `overview`, `manga`, `novel`) |
-
-### 4. Productivity & Screen Capture Tools
-| Command | Description |
-| :--- | :--- |
-| `caelestia capture region` (or `capture`) | Interactive region screenshot with Swappy editor |
-| `caelestia capture freeze` | Freeze-screen interactive region screenshot |
-| `caelestia capture ocr` (or `caelestia ocr`) | Select a region on screen to extract text directly to clipboard via Tesseract OCR |
-| `caelestia capture lens` (or `caelestia lens`) | Select a screen region to perform visual search on Google Lens |
-| `caelestia clipboard toggle` | Toggle the clipboard history drawer |
-| `caelestia clipboard clear` | Wipe clipboard history and clear `wl-clipboard` / `cliphist` |
-| `caelestia lock` | Lock your desktop via the Caelestia lockscreen |
-| `caelestia dnd [toggle\|on\|off\|status]` | Toggle or set Do Not Disturb notification mode |
-| `caelestia toast <title> <msg> [icon] [level]` | Send a custom on-screen notification toast (`info`, `success`, `warn`, `error`) |
-
-### 5. Media Playback & Controls
-| Command | Description |
-| :--- | :--- |
-| `caelestia media` | Toggle the media player drawer |
-| `caelestia media play-pause` (or `play-pause`) | Toggle playback on active MPRIS player |
-| `caelestia media next` (or `next`) | Skip to the next track |
-| `caelestia media prev` (or `prev`) | Skip to the previous track |
-
-### 6. Developer & Universal IPC
-| Command | Description |
-| :--- | :--- |
-| `caelestia ipc show` | Print all live registered IPC targets and available methods in the running shell |
-| `caelestia ipc <target> <function> [args...]` | Call any IpcHandler directly in the running shell |
-
----
 
 ### Manual Build (Alternative)
 
