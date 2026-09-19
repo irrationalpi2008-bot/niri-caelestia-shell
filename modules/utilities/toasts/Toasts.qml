@@ -13,6 +13,7 @@ Item {
     readonly property int spacing: Appearance.spacing.sm
     property bool flag
 
+    visible: height > 0
     implicitWidth: Config.utilities.sizes.toastWidth - Appearance.padding.md * 2
     implicitHeight: {
         let h = -spacing;
@@ -21,7 +22,7 @@ Item {
             if (item && !item.modelData.closed && !item.previewHidden)
                 h += item.implicitHeight + spacing;
         }
-        return h;
+        return Math.max(0, h);
     }
 
     Repeater {

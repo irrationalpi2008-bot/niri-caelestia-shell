@@ -66,6 +66,7 @@ Variants {
 
             StyledRect {
                 anchors.fill: parent
+                visible: opacity > 0
                 opacity: visibilities.session && Config.session.enabled ? 0.5 : 0
                 color: Colours.palette.m3scrim
 
@@ -77,7 +78,7 @@ Variants {
             Item {
                 anchors.fill: parent
                 opacity: Colours.transparency.enabled ? Colours.transparency.base : 1
-                layer.enabled: true
+                layer.enabled: panels.hasActive
                 layer.effect: MultiEffect {
                     shadowEnabled: true
                     blurMax: 15

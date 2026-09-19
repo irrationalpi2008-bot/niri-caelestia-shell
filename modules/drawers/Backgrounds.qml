@@ -23,6 +23,7 @@ Shape {
     anchors.margins: Config.border.thickness
     anchors.leftMargin: bar.implicitWidth
     preferredRendererType: Shape.CurveRenderer
+    visible: panels.hasActive
 
     Osd.Background {
         wrapper: root.panels.osd

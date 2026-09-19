@@ -31,6 +31,27 @@ Item {
     readonly property MangaModule.Wrapper manga: manga
     readonly property NovelModule.Wrapper novel: novel
 
+    readonly property bool hasActive: visibilities.launcher
+        || visibilities.dashboard
+        || visibilities.session
+        || visibilities.utilities
+        || visibilities.quicktoggles
+        || visibilities.manga
+        || visibilities.novel
+        || visibilities.osd
+        || launcher.visible
+        || dashboard.visible
+        || session.visible
+        || utilities.visible
+        || quicktoggles.visible
+        || manga.visible
+        || novel.visible
+        || osd.visible
+        || notifications.visible
+        || popouts.visible
+        || popouts.hasCurrent
+        || popouts.isDetached
+
     anchors.fill: parent
     anchors.margins: Config.border.thickness
     anchors.leftMargin: bar.implicitWidth
