@@ -107,7 +107,7 @@ Variants {
                 property bool quicktoggles
                 property bool keybinds
                 property bool editingWeatherLocation
-                property bool notifsExpanded
+                property bool notifsExpanded: true
                 property bool manga
                 property bool novel
 

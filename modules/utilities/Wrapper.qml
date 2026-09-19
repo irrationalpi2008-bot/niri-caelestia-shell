@@ -45,7 +45,21 @@ Item {
         }
     ]
 
-    Content {
+    property bool wasOpened: false
+
+    onVisibilityChanged: {
+        if (root.visibility)
+            root.wasOpened = true;
+    }
+
+    Loader {
         id: content
+
+        active: root.visibility || root.wasOpened
+
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+
+        sourceComponent: Content {}
     }
 }

@@ -27,6 +27,11 @@ Column {
 
         KeyNavigation.down: shutdown
 
+        Component.onCompleted: {
+            if (root.visibilities.session)
+                logout.focus = true;
+        }
+
         Connections {
             target: root.visibilities
 

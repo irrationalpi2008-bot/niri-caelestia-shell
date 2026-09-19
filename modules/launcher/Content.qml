@@ -247,6 +247,16 @@ Item {
                 }
             }
 
+            Component.onCompleted: {
+                if (root.visibilities.launcher) {
+                    search.focus = true;
+                    if (root.visibilities.clipboardRequested) {
+                        search.text = Config.launcher.actionPrefix + "clip ";
+                        root.visibilities.clipboardRequested = false;
+                    }
+                }
+            }
+
             Connections {
                 target: root.visibilities
 

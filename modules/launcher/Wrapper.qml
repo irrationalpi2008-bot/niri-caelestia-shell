@@ -47,11 +47,28 @@ Item {
         }
     ]
 
-    Content {
+    property bool wasOpened: false
+
+    Connections {
+        target: root.visibilities
+        function onLauncherChanged(): void {
+            if (root.visibilities.launcher)
+                root.wasOpened = true;
+        }
+    }
+
+    Loader {
         id: content
 
-        wrapper: root
-        visibilities: root.visibilities
-        panels: root.panels
+        active: (root.visibilities.launcher && Config.launcher.enabled) || root.wasOpened
+
+        anchors.top: parent.top
+        anchors.horizontalCenter: parent.horizontalCenter
+
+        sourceComponent: Content {
+            wrapper: root
+            visibilities: root.visibilities
+            panels: root.panels
+        }
     }
 }

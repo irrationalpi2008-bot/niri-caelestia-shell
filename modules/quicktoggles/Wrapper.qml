@@ -11,6 +11,7 @@ Item {
     visible: height > 0
     implicitHeight: 0
     implicitWidth: content.implicitWidth
+    clip: true
 
     states: State {
         name: "visible"
@@ -29,7 +30,7 @@ Item {
             Anim {
                 target: root
                 property: "implicitHeight"
-                duration: Appearance.anim.durations.small
+                duration: Appearance.anim.durations.normal
                 easing.bezierCurve: Appearance.anim.curves.emphasizedDecel
             }
         },
@@ -40,16 +41,33 @@ Item {
             Anim {
                 target: root
                 property: "implicitHeight"
-                duration: Appearance.anim.durations.small / 2
+                duration: Appearance.anim.durations.small
                 easing.bezierCurve: Appearance.anim.curves.emphasizedAccel
             }
         }
     ]
 
-    Content {
+    property bool wasOpened: false
+
+    Connections {
+        target: root.visibilities
+        function onQuicktogglesChanged(): void {
+            if (root.visibilities.quicktoggles)
+                root.wasOpened = true;
+        }
+    }
+
+    Loader {
         id: content
 
-        wrapper: root
-        visibilities: root.visibilities
+        active: root.visibilities.quicktoggles || root.wasOpened
+
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+
+        sourceComponent: Content {
+            wrapper: root
+            visibilities: root.visibilities
+        }
     }
 }

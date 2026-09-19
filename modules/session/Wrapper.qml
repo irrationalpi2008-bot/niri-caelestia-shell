@@ -46,9 +46,26 @@ Item {
         }
     ]
 
-    Content {
+    property bool wasOpened: false
+
+    Connections {
+        target: root.visibilities
+        function onSessionChanged(): void {
+            if (root.visibilities.session)
+                root.wasOpened = true;
+        }
+    }
+
+    Loader {
         id: content
 
-        visibilities: root.visibilities
+        active: (root.visibilities.session && Config.session.enabled) || root.wasOpened
+
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.left: parent.left
+
+        sourceComponent: Content {
+            visibilities: root.visibilities
+        }
     }
 }

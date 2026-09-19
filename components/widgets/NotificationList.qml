@@ -25,7 +25,10 @@ Item {
 
     signal cleared
 
-    readonly property real desiredContentHeight: headerRow.implicitHeight + column.spacing + notifList.contentHeight + notifList.spacing * Math.max(0, Notifs.list.length - 1)
+    readonly property real desiredContentHeight: {
+        const listHeight = notifList.contentHeight > 0 ? notifList.contentHeight : Notifs.list.length * 64;
+        return headerRow.implicitHeight + column.spacing + listHeight + notifList.spacing * Math.max(0, Notifs.list.length - 1);
+    }
 
     implicitHeight: column.implicitHeight
 
@@ -200,6 +203,7 @@ Item {
         color: notif?.urgency === NotificationUrgency.Critical ? Colours.palette.m3errorContainer : Colours.tPalette.m3surfaceContainerHigh
 
         Behavior on implicitHeight {
+            enabled: notifItem.itemExpanded || notifItem.height > 0
             Anim {
                 duration: Appearance.anim.durations.small
                 easing.bezierCurve: Appearance.anim.curves.emphasizedDecel

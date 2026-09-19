@@ -74,6 +74,7 @@ Item {
             }
 
             Behavior on Layout.preferredHeight {
+                enabled: Boolean(root.wrapper && root.wrapper.visible && root.wrapper.height >= root.wrapper.implicitHeight - 1)
                 Anim {
                     duration: Appearance.anim.durations.normal
                     easing.bezierCurve: Appearance.anim.curves.emphasized
