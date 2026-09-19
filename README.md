@@ -1,4 +1,4 @@
-<h1 align=center>🌌 Caelestia Shell for Niri</h1>
+<h1 align=center>Caelestia Shell for Niri</h1>
 
 <div align=center>
 
@@ -8,7 +8,7 @@
 
 </div>
 
-> Actively maintained fork of [AyushKr2003's niri-caelestia-shell](https://github.com/AyushKr2003/niri-caelestia-shell). Kept alive for Niri users, with ongoing C++ core optimizations. 🚀
+> Actively maintained fork of [AyushKr2003's niri-caelestia-shell](https://github.com/AyushKr2003/niri-caelestia-shell). Kept alive for Niri users, with ongoing C++ core optimizations.
 
 <div align=center>
 
@@ -37,26 +37,26 @@ https://github.com/user-attachments/assets/0840f496-575c-4ca6-83a8-87bb01a85c5f
 
 ---
 
-## ✨ Features & Tweaks
+## Features
 
-Based on [AyushKr2003's niri-caelestia-shell](https://github.com/AyushKr2003/niri-caelestia-shell) and [jutraim](https://github.com/jutraim/niri-caelestia-shell), with extensive modern performance improvements and a complete CLI management suite:
+Based on the Niri port by AyushKr2003 and jutraim, with native C++ optimizations and a unified CLI suite:
 
-- **⚡ Core C++ Engine Optimizations**:
-  - **Native C++ Fuzzy Search**: Instant, zero-latency application filtering in `AppDb` and `CUtils` without JavaScript garbage collection pauses.
-  - **In-Process Telemetry**: `/proc/cpuinfo` and `/proc/net/dev` parsed directly in C++ (`SysMonitor`), calculating CPU usage percentages, network download/upload rates, and sparkline history ring buffers in native code.
+- **Core C++ Engine Optimizations**:
+  - **Native Fuzzy Search**: Instant, zero-latency application filtering in `AppDb` and `CUtils` without JavaScript garbage collection pauses.
+  - **In-Process Telemetry**: `/proc/cpuinfo` and `/proc/net/dev` parsed directly in C++ (`SysMonitor`), calculating CPU percentages, network download/upload rates, and sparkline history ring buffers in native code.
   - **Zero-Process Brightness**: Direct `/sys/class/backlight` sysfs reading, eliminating shell spawns (`sh -c echo $(brightnessctl ...)`).
   - **On-Demand Drawer Loading**: Heavy components like the Manga and Novel readers are wrapped in lazy `Loader` components to keep idle RAM minimal.
-- **🛠 Unified `caelestia` CLI Suite**: Comprehensive single-command control for every feature in the shell—from application launchers, screenshot/OCR capture, and clipboard management, to system doctor diagnostics and automated updates.
-- **⚡ Automated One-Command Installer**: Non-destructive installer that configures system/AUR packages, creates a dedicated Python venv for Material You color generation, compiles native C++ plugins, and verifies installation health.
-- **🎨 Dynamic Material You Theming**: Live wallpaper-driven palette generation powered by `python-materialyoucolor` with 9 scheme variants, light/dark modes, and seamless cross-app sync.
-- **🔍 AI & Productivity Screen Capture**: Integrated area picker with custom cursor indicators for region screenshots (with Swappy editor), OCR text extraction to clipboard via Tesseract, and Google Lens visual search.
-- **📋 Integrated Clipboard Manager**: Built-in clipboard history drawer backed by `cliphist` and `wl-clipboard`, with quick clear capabilities.
-- **⚙️ Visual Config Editor**: Full graphical JSON editor with searchable icon/font pickers, array editing (battery warnings, idle timeouts), and nested object support.
-- **🔋 Intelligent Battery Monitor**: Configurable warning notifications at custom battery thresholds with specialized icons, alert levels, and messages.
-- **📊 Enhanced Workspace Bar**: Program icons, drag-to-reorder windows, context menus, app grouping, and active window indicators.
-- **💻 Real-Time System Monitor**: CPU, GPU (AMD/NVIDIA), and Memory resource monitoring with live graphs and network bandwidth tracking.
-- **📚 Built-in Readers**: Built-in lazy-loaded Manga and Light Novel readers accessible directly from the drawer system.
-- **🔀 Shell Switcher**: Seamless instant switching between Caelestia Shell and your default/inir shell without losing your session.
+- **Unified `caelestia` CLI Suite**: Single-command control for shell functions—including launchers, screen capture, OCR, clipboard, doctor diagnostics, and updates.
+- **Automated Installer**: Non-destructive installer that resolves dependencies, configures a dedicated Python venv for Material You color generation, builds C++ plugins, and verifies installation health.
+- **Dynamic Material You Theming**: Live wallpaper-driven palette generation powered by `python-materialyoucolor` with 9 scheme variants, light/dark modes, and cross-app sync.
+- **Screen Capture & AI Tools**: Integrated area picker for region screenshots (with Swappy editor), OCR text extraction via Tesseract, and Google Lens visual search.
+- **Integrated Clipboard Manager**: Built-in clipboard history drawer backed by `cliphist` and `wl-clipboard`, with quick clear capabilities.
+- **Control Center & Configuration**: Graphical settings window for appearance, fonts, themes, scaling, transparency, audio, and bluetooth, paired with structured JSON configuration (`~/.config/niri_caelestia/shell.json`).
+- **Battery Monitor**: Warning notifications at configurable battery thresholds with icons, critical levels, and auto-hibernation protection.
+- **Workspace Bar**: Application icons, drag-to-reorder columns, context menus, window grouping, and active window indicators.
+- **System Monitor**: Real-time CPU, GPU (AMD/NVIDIA), and Memory resource monitoring with live graphs and network bandwidth tracking.
+- **Built-in Readers**: Lazy-loaded Manga and Light Novel reader drawers.
+- **Shell Switcher**: Toggle between Caelestia Shell and your default/inir shell without losing your session.
 
 ---
 
@@ -96,7 +96,7 @@ Then simply build and install using `cmake`.
 
 ---
 
-## ⚡ Installation & Automated Setup
+## Installation & Automated Setup
 
 ### Automated One-Command Installation (Arch Linux / Arch-based)
 
@@ -122,7 +122,7 @@ cd niri-caelestia-shell
 
 ---
 
-## 🛠 The `caelestia` CLI Suite
+## The `caelestia` CLI Suite
 
 The `caelestia` command is automatically symlinked into `~/.local/bin/caelestia` during installation, providing comprehensive control over every feature of the shell.
 
@@ -221,7 +221,7 @@ If you prefer building manually without the automated installer:
 
 ---
 
-## 🚀 Usage with Niri
+## Usage with Niri
 
 You can start the shell directly with `caelestia start` or via:
 ```sh
@@ -429,7 +429,7 @@ layer-rule {
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 Config lives in:
 
@@ -765,7 +765,7 @@ I don't have nix, plz help :D
 
 </details>
 
-### 🎭 PFP/Wallpapers
+### Profile Picture & Wallpapers
 The profile picture for the dashboard is read from the file `~/.face`, so to set
 it you can copy your image to there or set it via the dashboard. **It's not a directory.**
 
@@ -777,7 +777,7 @@ To set the wallpaper, you can use the app launcher command `> wallpaper`.
 
 ---
 
-## 🧪 Known Issues
+## Known Issues
 
 1. Task manager has no Intel GPU support (AMD/NVIDIA only)
 2. Focus grabbing for Quickshell windows behaves awkwardly due to Niri limitations
@@ -786,7 +786,7 @@ To set the wallpaper, you can use the app launcher command `> wallpaper`.
 
 ---
 
-## 🙏 Credits
+## Credits
 
 * [AyushKr2003/niri-caelestia-shell](https://github.com/AyushKr2003/niri-caelestia-shell) – The original niri fork and awesome features this project builds upon
 * [Quickshell](https://github.com/quickshell/quickshell) – Core shell framework
@@ -798,6 +798,6 @@ To set the wallpaper, you can use the app launcher command `> wallpaper`.
 
 ---
 
-## 📈 Useless chart
+## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=irrationalpi2008-bot/niri-caelestia-shell\&type=Date)](https://star-history.com/#irrationalpi2008-bot/niri-caelestia-shell&Date)
