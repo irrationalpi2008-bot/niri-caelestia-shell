@@ -3,6 +3,7 @@ pragma ComponentBehavior: Bound
 
 import qs.components.misc
 import qs.services
+import Caelestia
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -305,14 +306,15 @@ Singleton {
         }
 
         function initBrightness(): void {
-            if (isAppleDisplay)
+            if (isAppleDisplay) {
                 initProc.command = ["asdbctl", "get"];
-            else if (isDdc)
+                initProc.running = true;
+            } else if (isDdc) {
                 initProc.command = ["ddcutil", "-b", busNum, "getvcp", "10", "--brief"];
-            else
-                initProc.command = ["sh", "-c", "echo a b c $(brightnessctl g) $(brightnessctl m)"];
-
-            initProc.running = true;
+                initProc.running = true;
+            } else {
+                monitor.brightness = CUtils.getBacklightBrightness();
+            }
         }
 
         onBusNumChanged: initBrightness()

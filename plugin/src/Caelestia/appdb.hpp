@@ -85,6 +85,7 @@ public:
     [[nodiscard]] QQmlListProperty<AppEntry> apps();
 
     Q_INVOKABLE void incrementFrequency(const QString& id);
+    Q_INVOKABLE QList<caelestia::AppEntry*> filter(const QString& search) const;
 
 signals:
     void pathChanged();
@@ -102,6 +103,7 @@ private:
     QList<QRegularExpression> m_favouriteAppsRegex;
     QHash<QString, AppEntry*> m_apps;
     mutable QList<AppEntry*> m_sortedApps;
+    mutable bool m_sortedDirty = true;
 
     QString regexifyString(const QString& original) const;
     QList<AppEntry*>& getSortedApps() const;

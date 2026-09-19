@@ -47,13 +47,16 @@ Item {
         }
     ]
 
-    MangaReader {
-        id: mangaReader
+    Loader {
+        id: mangaReaderLoader
         width: 600
         height: parent.height
         anchors.left: parent.left
-        visible: root.visible
-        visibilities: root.visibilities
+        active: (root.visibilities.manga && Config.extra.manga) || root.visible
+
+        sourceComponent: MangaReader {
+            visibilities: root.visibilities
+        }
     }
 
     clip: true

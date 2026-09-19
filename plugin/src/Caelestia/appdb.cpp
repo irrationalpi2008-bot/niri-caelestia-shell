@@ -1,8 +1,10 @@
 #include "appdb.hpp"
+#include "fuzzy.hpp"
 
 #include <qsqldatabase.h>
 #include <qsqlquery.h>
 #include <quuid.h>
+#include <vector>
 
 namespace caelestia {
 
@@ -172,6 +174,7 @@ void AppDb::setFavouriteApps(const QStringList& favApps) {
     }
 
     m_favouriteApps = favApps;
+    m_sortedDirty = true;
     emit favouriteAppsChanged();
     m_favouriteAppsRegex.clear();
     m_favouriteAppsRegex.reserve(m_favouriteApps.size());
@@ -211,6 +214,7 @@ void AppDb::incrementFrequency(const QString& id) {
 
     auto* app = m_apps.value(id);
     if (app) {
+        m_sortedDirty = true;
         const auto before = getSortedApps();
         app->incrementFrequency();
 
@@ -223,6 +227,9 @@ void AppDb::incrementFrequency(const QString& id) {
 }
 
 QList<AppEntry*>& AppDb::getSortedApps() const {
+    if (!m_sortedDirty && !m_sortedApps.isEmpty()) {
+        return m_sortedApps;
+    }
     m_sortedApps = m_apps.values();
     std::sort(m_sortedApps.begin(), m_sortedApps.end(), [this](AppEntry* a, AppEntry* b) {
         bool aIsFav = isFavourite(a);
@@ -235,7 +242,72 @@ QList<AppEntry*>& AppDb::getSortedApps() const {
         }
         return a->name().localeAwareCompare(b->name()) < 0;
     });
+    m_sortedDirty = false;
     return m_sortedApps;
+}
+
+QList<caelestia::AppEntry*> AppDb::filter(const QString& search) const {
+    const QString trimmed = search.trimmed();
+    if (trimmed.isEmpty()) {
+        return getSortedApps();
+    }
+
+    struct ScoredApp {
+        int score;
+        AppEntry* app;
+    };
+    std::vector<ScoredApp> matches;
+    matches.reserve(static_cast<size_t>(m_apps.size()));
+
+    for (AppEntry* app : m_apps) {
+        if (!app) {
+            continue;
+        }
+
+        int bestScore = fuzzyScore(trimmed, app->name());
+
+        const int genScore = fuzzyScore(trimmed, app->genericName());
+        if (genScore > 0) {
+            bestScore = std::max(bestScore, static_cast<int>(static_cast<double>(genScore) * 0.8));
+        }
+
+        const int kwScore = fuzzyScore(trimmed, app->keywords());
+        if (kwScore > 0) {
+            bestScore = std::max(bestScore, static_cast<int>(static_cast<double>(kwScore) * 0.6));
+        }
+
+        const int idScore = fuzzyScore(trimmed, app->id());
+        if (idScore > 0) {
+            bestScore = std::max(bestScore, static_cast<int>(static_cast<double>(idScore) * 0.7));
+        }
+
+        const int commentScore = fuzzyScore(trimmed, app->comment());
+        if (commentScore > 0) {
+            bestScore = std::max(bestScore, static_cast<int>(static_cast<double>(commentScore) * 0.4));
+        }
+
+        if (bestScore > 0) {
+            if (isFavourite(app)) {
+                bestScore += 500;
+            }
+            bestScore += static_cast<int>(std::min(app->frequency() * 5U, 200U));
+            matches.push_back({ bestScore, app });
+        }
+    }
+
+    std::sort(matches.begin(), matches.end(), [](const ScoredApp& a, const ScoredApp& b) {
+        if (a.score != b.score) {
+            return a.score > b.score;
+        }
+        return a.app->name().localeAwareCompare(b.app->name()) < 0;
+    });
+
+    QList<AppEntry*> result;
+    result.reserve(static_cast<qsizetype>(matches.size()));
+    for (const auto& m : matches) {
+        result.append(m.app);
+    }
+    return result;
 }
 
 bool AppDb::isFavourite(const AppEntry* app) const {
@@ -262,12 +334,14 @@ quint32 AppDb::getFrequency(const QString& id) const {
 }
 
 void AppDb::updateAppFrequencies() {
+    m_sortedDirty = true;
     const auto before = getSortedApps();
 
     for (auto* app : std::as_const(m_apps)) {
         app->setFrequency(getFrequency(app->id()));
     }
 
+    m_sortedDirty = true;
     if (before != getSortedApps()) {
         emit appsChanged();
     }
@@ -283,6 +357,7 @@ void AppDb::updateApps() {
             auto* const newEntry = new AppEntry(entry, getFrequency(id), this);
             QObject::connect(newEntry, &QObject::destroyed, this, [id, this]() {
                 if (m_apps.remove(id)) {
+                    m_sortedDirty = true;
                     emit appsChanged();
                 }
             });
@@ -304,6 +379,7 @@ void AppDb::updateApps() {
     }
 
     if (dirty) {
+        m_sortedDirty = true;
         emit appsChanged();
     }
 }

@@ -25,6 +25,12 @@ public:
     Q_INVOKABLE bool deleteFile(const QUrl& path) const;
     Q_INVOKABLE bool exists(const QString& path) const;
     Q_INVOKABLE QString toLocalFile(const QUrl& url) const;
+    Q_INVOKABLE qreal getBacklightBrightness() const;
+    Q_INVOKABLE QList<QObject*> fuzzySearch(
+        const QString& search,
+        const QList<QObject*>& items,
+        const QStringList& keys,
+        const QList<qreal>& weights = {}) const;
 };
 
 } // namespace caelestia

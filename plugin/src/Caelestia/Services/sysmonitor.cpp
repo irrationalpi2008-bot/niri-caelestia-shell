@@ -45,6 +45,41 @@ QVariantMap SysMonitor::system() const { return m_system; }
 QVariantList SysMonitor::diskmounts() const { return m_diskmounts; }
 QVariantMap SysMonitor::gpu() const { return m_gpu; }
 
+double SysMonitor::cpuPerc() const { return m_cpuPerc; }
+QString SysMonitor::cpuModelClean() const { return m_cpuModelClean; }
+QString SysMonitor::gpuNameClean() const { return m_gpuNameClean; }
+
+double SysMonitor::downloadSpeed() const { return m_downloadSpeed; }
+double SysMonitor::uploadSpeed() const { return m_uploadSpeed; }
+double SysMonitor::downloadTotal() const { return m_downloadTotal; }
+double SysMonitor::uploadTotal() const { return m_uploadTotal; }
+QList<qreal> SysMonitor::downloadHistory() const { return m_downloadHistory; }
+QList<qreal> SysMonitor::uploadHistory() const { return m_uploadHistory; }
+
+QString SysMonitor::cleanCpuName(const QString& name) {
+    if (name.isEmpty()) return QString();
+    static const QRegularExpression re("(\\(R\\)|\\(TM\\)|CPU|\\d+th Gen |\\d+nd Gen |\\d+rd Gen |\\d+st Gen |Core |Processor)", QRegularExpression::CaseInsensitiveOption);
+    static const QRegularExpression spaces("\\s+");
+    QString cleaned = name;
+    cleaned = cleaned.replace(re, "").replace(spaces, " ").trimmed();
+    if (cleaned.length() > 25) {
+        cleaned = cleaned.left(22) + "...";
+    }
+    return cleaned;
+}
+
+QString SysMonitor::cleanGpuName(const QString& name) {
+    if (name.isEmpty()) return QString();
+    static const QRegularExpression re("(NVIDIA GeForce |NVIDIA |AMD Radeon |AMD |Intel\\(R\\) |Intel |\\(R\\)|\\(TM\\)|Graphics| Laptop GPU| Mobile| Desktop)", QRegularExpression::CaseInsensitiveOption);
+    static const QRegularExpression spaces("\\s+");
+    QString cleaned = name;
+    cleaned = cleaned.replace(re, "").replace(spaces, " ").trimmed();
+    if (cleaned.length() > 25) {
+        cleaned = cleaned.left(22) + "...";
+    }
+    return cleaned;
+}
+
 int SysMonitor::updateInterval() const { return m_updateInterval; }
 void SysMonitor::setUpdateInterval(int interval) {
     if (m_updateInterval != interval) {
@@ -168,43 +203,61 @@ void SysMonitor::updateCpu() {
         }
     }
 
+    // Calculate overall CPU utilization percentage
+    if (total.size() >= 4) {
+        qint64 totalSum = 0;
+        for (const auto& v : total) {
+            totalSum += v.toLongLong();
+        }
+        qint64 idleSum = total[3].toLongLong() + (total.size() > 4 ? total[4].toLongLong() : 0);
+
+        qint64 totalDiff = totalSum - m_lastCpuTotal;
+        qint64 idleDiff = idleSum - m_lastCpuIdle;
+        double newPerc = (totalDiff > 0) ? (1.0 - static_cast<double>(idleDiff) / static_cast<double>(totalDiff)) : 0.0;
+        if (newPerc < 0.0) newPerc = 0.0;
+        if (newPerc > 1.0) newPerc = 1.0;
+
+        m_lastCpuTotal = totalSum;
+        m_lastCpuIdle = idleSum;
+
+        if (qAbs(m_cpuPerc - newPerc) > 0.001) {
+            m_cpuPerc = newPerc;
+            emit cpuPercChanged();
+        }
+    }
+
     QVariantMap newCpu = m_cpu;
     newCpu.insert("total", total);
     newCpu.insert("cores", cores);
     newCpu.insert("count", count);
 
-    // 2. Parse /proc/cpuinfo for model and frequency (if missing)
-    if (newCpu.value("model").toString().isEmpty()) {
-        QProcess grep;
-        grep.start("sh", QStringList() << "-c" << "grep -m1 'model name' /proc/cpuinfo | cut -d: -f2");
-        grep.waitForFinished(500);
-        QString model = QString::fromUtf8(grep.readAllStandardOutput()).trimmed();
-        if (!model.isEmpty()) {
-            newCpu.insert("model", model);
-        } else {
-            // ARM fallback
-            QProcess arm;
-            arm.start("sh", QStringList() << "-c" << "grep -m1 'Hardware' /proc/cpuinfo | cut -d: -f2");
-            arm.waitForFinished(500);
-            model = QString::fromUtf8(arm.readAllStandardOutput()).trimmed();
-            if (!model.isEmpty()) newCpu.insert("model", model);
-        }
-    }
-
-    // 3. Frequency
-    QFile clk("/proc/cpuinfo");
-    if (clk.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        QTextStream c(&clk);
-        while (!c.atEnd()) {
-            QString l = c.readLine();
-            if (l.contains("cpu MHz", Qt::CaseInsensitive)) {
-                newCpu.insert("frequency", l.section(':', 1).trimmed().toDouble());
-                break;
+    // 2. Parse /proc/cpuinfo directly for model and frequency (zero subprocess calls)
+    if (newCpu.value("model").toString().isEmpty() || !newCpu.contains("frequency")) {
+        QFile clk("/proc/cpuinfo");
+        if (clk.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            QTextStream c(&clk);
+            while (!c.atEnd()) {
+                QString l = c.readLine();
+                if (newCpu.value("model").toString().isEmpty()) {
+                    if (l.startsWith("model name", Qt::CaseInsensitive) || l.startsWith("Hardware", Qt::CaseInsensitive)) {
+                        QString model = l.section(':', 1).trimmed();
+                        if (!model.isEmpty()) newCpu.insert("model", model);
+                    }
+                }
+                if (l.contains("cpu MHz", Qt::CaseInsensitive) && !newCpu.contains("frequency")) {
+                    newCpu.insert("frequency", l.section(':', 1).trimmed().toDouble());
+                }
             }
         }
     }
+
+    QString cleanM = cleanCpuName(newCpu.value("model").toString());
+    if (m_cpuModelClean != cleanM) {
+        m_cpuModelClean = cleanM;
+        emit cpuModelCleanChanged();
+    }
     
-    // 4. Temperature
+    // 3. Temperature
     bool tempFound = false;
     QDir hwmonDir("/sys/class/hwmon");
     for (const QString& hwmonD : hwmonDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
@@ -241,32 +294,96 @@ void SysMonitor::updateCpu() {
     }
 }
 
-
-
-
 void SysMonitor::updateNetwork() {
     QFile file("/proc/net/dev");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return;
 
     QTextStream in(&file);
-    in.readLine(); // skip header
+    in.readLine(); // skip headers
     in.readLine();
 
     QVariantList newNet;
+    qint64 totalRx = 0;
+    qint64 totalTx = 0;
+
     while (!in.atEnd()) {
         QString line = in.readLine().trimmed();
-        if (!line.contains("eth") && !line.contains("en") && !line.contains("wl")) continue;
-        QStringList parts = line.split(" ", Qt::SkipEmptyParts);
-        if (parts.size() < 10) continue;
-        QVariantMap iface;
-        iface["name"] = parts[0].replace(":", "");
-        iface["rx"] = parts[1].toLongLong();
-        iface["tx"] = parts[9].toLongLong();
-        newNet.append(iface);
+        if (line.isEmpty()) continue;
+        qsizetype colonIdx = line.indexOf(':');
+        if (colonIdx == -1) continue;
+
+        QString ifaceName = line.left(colonIdx).trimmed();
+        if (ifaceName == "lo") continue;
+
+        QString rest = line.mid(colonIdx + 1).trimmed();
+        QStringList parts = rest.split(QRegularExpression("\\s+"), Qt::SkipEmptyParts);
+        if (parts.size() < 9) continue;
+
+        qint64 rx = parts[0].toLongLong();
+        qint64 tx = parts[8].toLongLong();
+        totalRx += rx;
+        totalTx += tx;
+
+        if (ifaceName.startsWith("eth") || ifaceName.startsWith("en") || ifaceName.startsWith("wl") || ifaceName.startsWith("wlan")) {
+            QVariantMap iface;
+            iface["name"] = ifaceName;
+            iface["rx"] = rx;
+            iface["tx"] = tx;
+            newNet.append(iface);
+        }
     }
 
     m_network = newNet;
     emit networkChanged();
+
+    qint64 now = QDateTime::currentMSecsSinceEpoch();
+    if (!m_networkInitialized) {
+        m_initialRxBytes = totalRx;
+        m_initialTxBytes = totalTx;
+        m_prevRxBytes = totalRx;
+        m_prevTxBytes = totalTx;
+        m_prevNetworkTimestamp = now;
+        m_networkInitialized = true;
+        return;
+    }
+
+    double timeDelta = static_cast<double>(now - m_prevNetworkTimestamp) / 1000.0;
+    if (timeDelta > 0.05) {
+        qint64 rxDelta = totalRx - m_prevRxBytes;
+        qint64 txDelta = totalTx - m_prevTxBytes;
+        if (rxDelta < 0) rxDelta += (1LL << 32);
+        if (txDelta < 0) txDelta += (1LL << 32);
+
+        m_downloadSpeed = static_cast<double>(rxDelta) / timeDelta;
+        m_uploadSpeed = static_cast<double>(txDelta) / timeDelta;
+
+        if (m_downloadSpeed < 0.0) m_downloadSpeed = 0.0;
+        if (m_uploadSpeed < 0.0) m_uploadSpeed = 0.0;
+
+        m_downloadHistory.append(m_downloadSpeed);
+        if (m_downloadHistory.size() > m_historyLength) {
+            m_downloadHistory.removeFirst();
+        }
+
+        m_uploadHistory.append(m_uploadSpeed);
+        if (m_uploadHistory.size() > m_historyLength) {
+            m_uploadHistory.removeFirst();
+        }
+
+        qint64 downTotal = totalRx - m_initialRxBytes;
+        qint64 upTotal = totalTx - m_initialTxBytes;
+        if (downTotal < 0) downTotal += (1LL << 32);
+        if (upTotal < 0) upTotal += (1LL << 32);
+
+        m_downloadTotal = static_cast<double>(downTotal);
+        m_uploadTotal = static_cast<double>(upTotal);
+
+        m_prevRxBytes = totalRx;
+        m_prevTxBytes = totalTx;
+        m_prevNetworkTimestamp = now;
+
+        emit networkRatesChanged();
+    }
 }
 
 void SysMonitor::updateDisk() {
@@ -532,12 +649,16 @@ void SysMonitor::updateGpuOnce() {
         }
     }
 
-    qDebug() << "[SysMonitor] updateGpuOnce result -" << "Type:" << gType << "Name:" << gName;
-
     m_gpu["type"] = gType;
     m_gpu["name"] = gName;
     m_gpu["utilization"] = 0.0;
     m_gpu["temperature"] = 0.0;
+
+    QString cleanG = cleanGpuName(gName);
+    if (m_gpuNameClean != cleanG) {
+        m_gpuNameClean = cleanG;
+        emit gpuNameCleanChanged();
+    }
     emit gpuChanged();
 }
 
@@ -593,8 +714,6 @@ void SysMonitor::updateGpu() {
             }
         }
     }
-
-    qDebug() << "[SysMonitor] updateGpu result -" << "Utilization:" << newGpu["utilization"] << "Temp:" << newGpu["temperature"];
 
     if (m_gpu != newGpu) {
         m_gpu = newGpu;

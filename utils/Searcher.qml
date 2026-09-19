@@ -1,7 +1,7 @@
 import Quickshell
+import Caelestia
 
 import "scripts/fzf.js" as Fzf
-import "scripts/fuzzysort.js" as Fuzzy
 import QtQuick
 
 Singleton {
@@ -17,14 +17,6 @@ Singleton {
     readonly property var fzf: useFuzzy ? [] : new Fzf.Finder(list, Object.assign({
         selector
     }, extraOpts))
-    readonly property list<var> fuzzyPrepped: useFuzzy ? list.map(e => {
-        const obj = {
-            _item: e
-        };
-        for (const k of keys)
-            obj[k] = Fuzzy.prepare(e[k]);
-        return obj;
-    }) : []
 
     function transformSearch(search: string): string {
         return search;
@@ -41,11 +33,7 @@ Singleton {
             return [...list];
 
         if (useFuzzy)
-            return Fuzzy.go(search, fuzzyPrepped, Object.assign({
-                all: true,
-                keys,
-                scoreFn: r => weights.reduce((a, w, i) => a + r[i].score * w, 0)
-            }, extraOpts)).map(r => r.obj._item);
+            return CUtils.fuzzySearch(search, list, keys, weights);
 
         return fzf.find(search).sort((a, b) => {
             if (a.score === b.score)

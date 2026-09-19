@@ -14,7 +14,6 @@ import Quickshell
 import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
-import "../../../utils/scripts/fuzzysort.js" as Fuzzy
 
 Item {
     id: root
@@ -88,35 +87,7 @@ Item {
     property string searchText: ""
 
     function filterApps(search: string): list<var> {
-        if (!search || search.trim() === "") {
-            const apps = [];
-            for (let i = 0; i < allAppsDb.apps.length; i++) {
-                apps.push(allAppsDb.apps[i]);
-            }
-            return apps;
-        }
-
-        if (!allAppsDb.apps || allAppsDb.apps.length === 0) {
-            return [];
-        }
-
-        const preparedApps = [];
-        for (let i = 0; i < allAppsDb.apps.length; i++) {
-            const app = allAppsDb.apps[i];
-            const name = app.name || app.entry?.name || "";
-            preparedApps.push({
-                _item: app,
-                name: Fuzzy.prepare(name)
-            });
-        }
-
-        const results = Fuzzy.go(search, preparedApps, {
-            all: true,
-            keys: ["name"],
-            scoreFn: r => r[0].score
-        });
-
-        return results.sort((a, b) => b._score - a._score).map(r => r.obj._item);
+        return allAppsDb.filter(search);
     }
 
     property list<var> filteredApps: []

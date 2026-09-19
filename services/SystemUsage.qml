@@ -10,13 +10,13 @@ Singleton {
     id: root
 
     // CPU properties
-    property string cpuName: cleanCpuName(SysMonitor.cpu.model || "")
-    property real cpuPerc
+    property string cpuName: SysMonitor.cpuModelClean || cleanCpuName(SysMonitor.cpu.model || "")
+    property real cpuPerc: SysMonitor.cpuPerc
     property real cpuTemp: SysMonitor.cpu.temperature || 0
 
     // GPU properties
     readonly property string gpuType: Config.services.gpuType.toUpperCase() || SysMonitor.gpu.type || "NONE"
-    property string gpuName: cleanGpuName(SysMonitor.gpu.name || "")
+    property string gpuName: SysMonitor.gpuNameClean || cleanGpuName(SysMonitor.gpu.name || "")
     property real gpuPerc: SysMonitor.gpu.utilization || 0
     property real gpuTemp: SysMonitor.gpu.temperature || 0
 
@@ -118,21 +118,8 @@ Singleton {
         
         function onCpuChanged() {
             let data = SysMonitor.cpu;
-            root.cpuName = root.cleanCpuName(data.model || "");
+            if (!root.cpuName) root.cpuName = root.cleanCpuName(data.model || "");
             root.cpuTemp = data.temperature || 0;
-            
-            if (data.total && data.total.length >= 8) {
-                const totalArray = Array.from(data.total);
-                const total = totalArray.reduce((a, b) => a + b, 0);
-                const idle = totalArray[3] + (totalArray[4] || 0);
-
-                const totalDiff = total - root.lastCpuTotal;
-                const idleDiff = idle - root.lastCpuIdle;
-                root.cpuPerc = totalDiff > 0 ? (1 - idleDiff / totalDiff) : 0;
-
-                root.lastCpuTotal = total;
-                root.lastCpuIdle = idle;
-            }
         }
         
         function onMemoryChanged() {

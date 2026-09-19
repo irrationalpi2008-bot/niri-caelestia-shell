@@ -1,4 +1,5 @@
 #include "cutils.hpp"
+#include "fuzzy.hpp"
 
 #include <QtConcurrent/qtconcurrentrun.h>
 #include <QtQuick/qquickitemgrabresult.h>
@@ -7,6 +8,7 @@
 #include <qfileinfo.h>
 #include <qfuturewatcher.h>
 #include <qqmlengine.h>
+#include <vector>
 
 namespace caelestia {
 
@@ -130,6 +132,79 @@ QString CUtils::toLocalFile(const QUrl& url) const {
     }
 
     return url.toLocalFile();
+}
+
+qreal CUtils::getBacklightBrightness() const {
+    QDir dir("/sys/class/backlight");
+    const QStringList entries = dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    if (!entries.isEmpty()) {
+        const QString blPath = dir.absoluteFilePath(entries.first());
+        QFile curFile(blPath + "/brightness");
+        QFile maxFile(blPath + "/max_brightness");
+        if (curFile.open(QIODevice::ReadOnly) && maxFile.open(QIODevice::ReadOnly)) {
+            bool ok1 = false, ok2 = false;
+            qint64 cur = QString::fromUtf8(curFile.readAll().trimmed()).toLongLong(&ok1);
+            qint64 max = QString::fromUtf8(maxFile.readAll().trimmed()).toLongLong(&ok2);
+            if (ok1 && ok2 && max > 0) {
+                return static_cast<qreal>(cur) / static_cast<qreal>(max);
+            }
+        }
+    }
+    return 0.5;
+}
+
+QList<QObject*> CUtils::fuzzySearch(
+    const QString& search,
+    const QList<QObject*>& items,
+    const QStringList& keys,
+    const QList<qreal>& weights) const {
+    const QString trimmed = search.trimmed();
+    if (trimmed.isEmpty()) {
+        return items;
+    }
+
+    struct ScoredObject {
+        double score;
+        QObject* obj;
+    };
+
+    std::vector<ScoredObject> matches;
+    matches.reserve(static_cast<size_t>(items.size()));
+
+    for (QObject* item : items) {
+        if (!item) {
+            continue;
+        }
+
+        double totalScore = 0.0;
+        bool anyMatch = false;
+
+        for (qsizetype i = 0; i < keys.size(); ++i) {
+            const QString& key = keys.at(i);
+            const double weight = (i < weights.size()) ? weights.at(i) : 1.0;
+            const QString val = item->property(key.toUtf8().constData()).toString();
+            const int score = fuzzyScore(trimmed, val);
+            if (score > 0) {
+                anyMatch = true;
+                totalScore += static_cast<double>(score) * weight;
+            }
+        }
+
+        if (anyMatch) {
+            matches.push_back({ totalScore, item });
+        }
+    }
+
+    std::sort(matches.begin(), matches.end(), [](const ScoredObject& a, const ScoredObject& b) {
+        return a.score > b.score;
+    });
+
+    QList<QObject*> result;
+    result.reserve(static_cast<qsizetype>(matches.size()));
+    for (const auto& m : matches) {
+        result.append(m.obj);
+    }
+    return result;
 }
 
 } // namespace caelestia

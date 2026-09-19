@@ -47,13 +47,16 @@ Item {
         }
     ]
 
-    NovelReader {
-        id: novelReader
+    Loader {
+        id: novelReaderLoader
         width: 600
         height: parent.height
         anchors.right: parent.right
-        visible: root.visible
-        visibilities: root.visibilities
+        active: (root.visibilities.novel && Config.extra.novel) || root.visible
+
+        sourceComponent: NovelReader {
+            visibilities: root.visibilities
+        }
     }
 
     clip: true

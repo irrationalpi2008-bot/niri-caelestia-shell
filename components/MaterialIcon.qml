@@ -8,7 +8,7 @@ StyledText {
     font.family: Appearance.font.family.material
     font.pointSize: Appearance.font.size.bodyLarge
     font.variableAxes: ({
-            FILL: fill.toFixed(1),
+            FILL: fill,
             GRAD: grade,
             opsz: fontInfo.pixelSize,
             wght: fontInfo.weight
