@@ -273,13 +273,13 @@ if [[ -f "$SWITCHER_DIR/shell-switcher.sh" ]]; then
 else
     info "Setting up shell switcher helper in $SWITCHER_DIR..."
     mkdir -p "$SWITCHER_DIR"
-    cat << 'SWITCHOVER' > "$SWITCHER_DIR/shell-switcher.sh"
+    cat << SWITCHOVER > "$SWITCHER_DIR/shell-switcher.sh"
 #!/usr/bin/env bash
 # Shell Switcher for Niri
 set -euo pipefail
 
-CHOICE="${1:-}"
-CAELESTIA_DIR="$HOME/ME/Programming/projects/niri-caelestia-shell"
+CHOICE="\${1:-}"
+CAELESTIA_DIR="$REPO_ROOT"
 
 kill_shells() {
     pkill -f "quickshell" 2>/dev/null || true
@@ -357,10 +357,16 @@ echo "  ║        Caelestia Shell Setup Completed Successfully!          ║"
 echo "  ╚═══════════════════════════════════════════════════════════════╝"
 echo -e "${C_RESET}"
 echo -e "You can now control everything using the ${C_CYAN}${C_BOLD}caelestia${C_RESET} command:"
-echo -e "  • ${C_CYAN}caelestia doctor${C_RESET}       — Check system health and diagnostics"
-echo -e "  • ${C_CYAN}caelestia update${C_RESET}       — Pull latest git updates and rebuild plugins"
-echo -e "  • ${C_CYAN}caelestia repair${C_RESET}       — Automatically repair build, venv, or state"
-echo -e "  • ${C_CYAN}caelestia theme <path>${C_RESET} — Change wallpaper and regenerate Material colors"
-echo -e "  • ${C_CYAN}caelestia switch${C_RESET}       — Toggle between Caelestia and default shell"
-echo -e "  • ${C_CYAN}caelestia status${C_RESET}       — Show active shell, PID, scheme, and status"
+echo -e "  • ${C_CYAN}caelestia status${C_RESET}          — Show active shell, PID, memory, compositor, theme"
+echo -e "  • ${C_CYAN}caelestia doctor${C_RESET}          — Inspect system health, dependencies, and diagnostics"
+echo -e "  • ${C_CYAN}caelestia update${C_RESET}          — Smart pull, auto-rebuild C++ plugins, and reload"
+echo -e "  • ${C_CYAN}caelestia theme <path>${C_RESET}    — Change wallpaper & regenerate Material You palette"
+echo -e "  • ${C_CYAN}caelestia launcher${C_RESET}        — Toggle application launcher drawer"
+echo -e "  • ${C_CYAN}caelestia controlcenter${C_RESET}   — Open Control Center visual settings"
+echo -e "  • ${C_CYAN}caelestia clipboard${C_RESET}       — Toggle clipboard history drawer or wipe history"
+echo -e "  • ${C_CYAN}caelestia capture [mode]${C_RESET}  — Region screenshot, OCR text extraction, Google Lens"
+echo -e "  • ${C_CYAN}caelestia switch${C_RESET}          — Seamlessly toggle between Caelestia and default shell"
+echo -e "  • ${C_CYAN}caelestia media${C_RESET}           — Control media drawer and playback"
+echo -e "  • ${C_CYAN}caelestia dnd / lock${C_RESET}      — Toggle Do Not Disturb or trigger screen lock"
+echo -e "  • ${C_CYAN}caelestia --help${C_RESET}          — View all available commands"
 echo ""

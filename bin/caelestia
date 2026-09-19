@@ -2,17 +2,32 @@
 # caelestia — Unified CLI & Management Suite for niri-caelestia-shell
 #
 # Commands:
-#   install     Automated installation of dependencies, venv, and plugins
-#   doctor      Check system health, dependencies, and QML plugin diagnostics
-#   update      Fetch updates, rebuild modified plugins, and re-sync venv
-#   repair      Automatically repair build artifacts, venv, and state
-#   status      Display active shell instance, PID, memory, and theming info
-#   theme       Change wallpaper, adjust theme flavor, or display scheme info
-#   switch      Quickly switch between Caelestia and your default/inir shell
-#   restart     Restart the active Caelestia shell process
-#   start       Launch Caelestia shell
-#   stop        Stop Caelestia shell
-#   uninstall   Safely clean up shell build artifacts and CLI symlink
+#   install       Automated installation of dependencies, venv, and plugins
+#   doctor        Check system health, dependencies, and QML plugin diagnostics
+#   update        Fetch updates, rebuild modified plugins, and re-sync venv
+#   repair        Automatically repair build artifacts, venv, and state
+#   status        Display active shell instance, PID, memory, and theming info
+#   theme         Change wallpaper, adjust theme flavor, or display scheme info
+#   switch        Quickly switch between Caelestia and your default/inir shell
+#   restart       Restart the active Caelestia shell process
+#   start         Launch Caelestia shell
+#   stop          Stop Caelestia shell
+#   log           View live Quickshell logs
+#   launcher      Toggle application launcher drawer
+#   controlcenter Toggle / open Control Center
+#   quicktoggles  Toggle Quick Toggles panel
+#   session       Toggle session / power menu
+#   overview      Toggle overview drawer
+#   media         Toggle media drawer (or control playback: play-pause, next, prev)
+#   manga         Toggle Manga Reader drawer
+#   novel         Toggle Novel Reader drawer
+#   clipboard     Toggle clipboard history, open, or wipe history
+#   capture       Area picker for screenshot, OCR text extraction, or Google Lens
+#   lock          Lock screen via Caelestia lockscreen
+#   dnd           Toggle or set Do Not Disturb mode
+#   toast         Display custom on-screen toast notification
+#   ipc           Directly query or call live Quickshell IPC targets
+#   uninstall     Safely clean up shell build artifacts and CLI symlink
 #
 # Run 'caelestia <command> --help' for details on any command.
 
@@ -56,24 +71,60 @@ print_help() {
     print_banner
     echo -e "${C_BOLD}Usage:${C_RESET} caelestia <command> [arguments...]"
     echo ""
-    echo -e "${C_BOLD}Commands:${C_RESET}"
-    echo -e "  ${C_CYAN}install${C_RESET}     Run automated installer (deps, venv, C++ plugin)"
-    echo -e "  ${C_CYAN}doctor${C_RESET}      Inspect system health, diagnostics, and missing tools"
-    echo -e "  ${C_CYAN}update${C_RESET}      Pull git updates, conditionally rebuild plugins & reload"
-    echo -e "  ${C_CYAN}repair${C_RESET}      Run automated diagnostics repair (--fix)"
-    echo -e "  ${C_CYAN}status${C_RESET}      Show current shell state, PID, memory, and theme"
-    echo -e "  ${C_CYAN}theme${C_RESET}       Set wallpaper and regenerate dynamic Material You palette"
-    echo -e "  ${C_CYAN}switch${C_RESET}      Toggle between Caelestia and default shell"
-    echo -e "  ${C_CYAN}restart${C_RESET}     Restart running Caelestia shell instance"
-    echo -e "  ${C_CYAN}start${C_RESET}       Launch Caelestia shell"
-    echo -e "  ${C_CYAN}stop${C_RESET}        Terminate running Caelestia shell"
-    echo -e "  ${C_CYAN}uninstall${C_RESET}   Cleanly remove Caelestia build artifacts & symlink"
+    echo -e "${C_BOLD}Lifecycle & Maintenance:${C_RESET}"
+    echo -e "  ${C_CYAN}install${C_RESET}        Run automated installer (deps, venv, C++ plugin)"
+    echo -e "  ${C_CYAN}doctor${C_RESET}         Inspect system health, diagnostics, and missing tools"
+    echo -e "  ${C_CYAN}update${C_RESET}         Pull git updates, rebuild plugins & reload"
+    echo -e "  ${C_CYAN}repair${C_RESET}         Run automated diagnostics repair (--fix)"
+    echo -e "  ${C_CYAN}status${C_RESET}         Show current shell state, PID, memory, and theme"
+    echo -e "  ${C_CYAN}switch${C_RESET}         Toggle between Caelestia and default shell"
+    echo -e "  ${C_CYAN}start${C_RESET}          Launch Caelestia shell"
+    echo -e "  ${C_CYAN}stop${C_RESET}           Terminate running Caelestia shell"
+    echo -e "  ${C_CYAN}restart${C_RESET}        Restart running Caelestia shell instance"
+    echo -e "  ${C_CYAN}log${C_RESET}            View live quickshell logs"
+    echo -e "  ${C_CYAN}uninstall${C_RESET}      Cleanly remove Caelestia build artifacts & symlink"
+    echo ""
+    echo -e "${C_BOLD}Shell Drawers & Navigation:${C_RESET}"
+    echo -e "  ${C_CYAN}launcher${C_RESET}       Toggle application launcher drawer"
+    echo -e "  ${C_CYAN}controlcenter${C_RESET}  Open Control Center settings window"
+    echo -e "  ${C_CYAN}quicktoggles${C_RESET}   Toggle Quick Toggles panel"
+    echo -e "  ${C_CYAN}session${C_RESET}        Toggle session / power menu"
+    echo -e "  ${C_CYAN}overview${C_RESET}       Toggle workspace overview"
+    echo -e "  ${C_CYAN}manga${C_RESET}          Toggle Manga Reader drawer"
+    echo -e "  ${C_CYAN}novel${C_RESET}          Toggle Novel Reader drawer"
+    echo -e "  ${C_CYAN}drawer <name>${C_RESET}  Toggle any drawer (launcher, media, overview, etc.)"
+    echo ""
+    echo -e "${C_BOLD}Productivity & Media Tools:${C_RESET}"
+    echo -e "  ${C_CYAN}clipboard${C_RESET}      Clipboard history [toggle|open|close|clear]"
+    echo -e "  ${C_CYAN}capture${C_RESET}        Area capture [region|freeze|ocr|lens]"
+    echo -e "  ${C_CYAN}theme${C_RESET}          Set wallpaper & regenerate Material You palette"
+    echo -e "  ${C_CYAN}media${C_RESET}          Media drawer & playback [toggle|play-pause|next|prev]"
+    echo -e "  ${C_CYAN}lock${C_RESET}           Lock screen via Caelestia lockscreen"
+    echo -e "  ${C_CYAN}dnd${C_RESET}            Do Not Disturb [toggle|on|off|status]"
+    echo -e "  ${C_CYAN}toast${C_RESET}          Trigger custom on-screen notification toast"
+    echo -e "  ${C_CYAN}ipc${C_RESET}            Low-level universal IPC call [show|call <target> <fn>]"
     echo ""
     echo -e "${C_BOLD}Options:${C_RESET}"
-    echo -e "  -v, --version   Show version and commit"
-    echo -e "  -h, --help      Show this help message"
+    echo -e "  -v, --version      Show version and commit"
+    echo -e "  -h, --help         Show this help message"
     echo ""
     echo -e "${C_DIM}Repository: $REPO_ROOT${C_RESET}"
+}
+
+# --- IPC Helper ---
+ipc_call() {
+    local target="$1"
+    local func="$2"
+    shift 2 || true
+
+    if quickshell -p "$REPO_ROOT/shell.qml" ipc call "$target" "$func" "$@" 2>/dev/null; then
+        return 0
+    fi
+    quickshell -c niri-caelestia-shell ipc call "$target" "$func" "$@" 2>/dev/null || {
+        echo -e "${C_RED}[caelestia]${C_RESET} Failed to communicate with running Caelestia shell via IPC." >&2
+        echo -e "${C_YELLOW}[caelestia]${C_RESET} Make sure Caelestia shell is running (run: 'caelestia status')." >&2
+        return 1
+    }
 }
 
 # --- Command Implementations ---
@@ -93,6 +144,10 @@ cmd_update() {
 cmd_repair() {
     echo -e "${C_CYAN}[caelestia]${C_RESET} Running automated repair suite..."
     exec "$REPO_ROOT/scripts/doctor/doctor.sh" --fix "$@"
+}
+
+cmd_log() {
+    exec quickshell log "$@"
 }
 
 cmd_status() {
@@ -183,6 +238,20 @@ cmd_status() {
 }
 
 cmd_theme() {
+    if [[ "${1:-}" == "get" ]]; then
+        if [[ -f "$STATE_CAELESTIA/wallpaper/path.txt" ]]; then
+            cat "$STATE_CAELESTIA/wallpaper/path.txt"
+        else
+            echo "No wallpaper set"
+        fi
+        return 0
+    fi
+
+    if [[ "${1:-}" == "list" ]]; then
+        ipc_call wallpaper list
+        return 0
+    fi
+
     local wall=""
     local mode="dark"
     local variant="scheme-tonal-spot"
@@ -200,6 +269,8 @@ cmd_theme() {
                 ;;
             -h|--help)
                 echo "Usage: caelestia theme [wallpaper_path] [--mode dark|light] [--variant <type>]"
+                echo "       caelestia theme get"
+                echo "       caelestia theme list"
                 echo ""
                 echo "Available variants:"
                 echo "  scheme-tonal-spot   (Default balanced Material You palette)"
@@ -254,7 +325,6 @@ cmd_switch() {
     fi
 
     if [[ -z "$target" ]]; then
-        # Check current shell and toggle
         local cur="inir"
         if [[ -f "$STATE_CAELESTIA/active_shell" ]]; then
             cur=$(cat "$STATE_CAELESTIA/active_shell")
@@ -277,6 +347,7 @@ cmd_restart() {
         bash "$SWITCHER_SCRIPT" caelestia
     else
         pkill -f "quickshell.*shell\.qml" 2>/dev/null || true
+        pkill -f "qs" 2>/dev/null || true
         sleep 0.5
         qs -p "$REPO_ROOT/shell.qml" >/dev/null 2>&1 &
         disown
@@ -299,6 +370,149 @@ cmd_stop() {
     echo -e "${C_GREEN}[caelestia]${C_RESET} ${C_BOLD}✔${C_RESET} Shell stopped."
 }
 
+# --- Shell Feature Commands ---
+
+cmd_drawer() {
+    local drawer="${1:-}"
+    if [[ -z "$drawer" ]]; then
+        echo "Usage: caelestia drawer <name>"
+        echo "Available drawers:"
+        ipc_call drawers list 2>/dev/null || echo "launcher, session, media, overview, manga, novel, controlcenter"
+        return 0
+    fi
+    ipc_call drawers toggle "$drawer"
+}
+
+cmd_launcher() {
+    ipc_call drawers toggle launcher
+}
+
+cmd_controlcenter() {
+    ipc_call controlCenter open
+}
+
+cmd_quicktoggles() {
+    ipc_call quicktoggles toggle
+}
+
+cmd_session() {
+    ipc_call drawers toggle session
+}
+
+cmd_overview() {
+    ipc_call drawers toggle overview
+}
+
+cmd_manga() {
+    ipc_call mangaReader toggle
+}
+
+cmd_novel() {
+    ipc_call novelReader toggle
+}
+
+cmd_clipboard() {
+    local action="${1:-toggle}"
+    case "$action" in
+        toggle) ipc_call clipboard toggle ;;
+        open)   ipc_call clipboard open ;;
+        close)  ipc_call clipboard close ;;
+        clear|wipe) ipc_call clipboard clear ;;
+        *)
+            echo "Usage: caelestia clipboard [toggle|open|close|clear]"
+            exit 1
+            ;;
+    esac
+}
+
+cmd_capture() {
+    local mode="${1:-region}"
+    case "$mode" in
+        region|screenshot)
+            ipc_call picker open
+            ;;
+        freeze)
+            ipc_call picker openFreeze
+            ;;
+        ocr)
+            ipc_call picker regionOcr
+            ;;
+        lens|search)
+            ipc_call picker regionSearch
+            ;;
+        *)
+            echo "Usage: caelestia capture [region|freeze|ocr|lens]"
+            echo "  region   - Standard region screenshot with swappy editor"
+            echo "  freeze   - Freeze-screen region screenshot"
+            echo "  ocr      - Extract text directly to clipboard (Tesseract OCR)"
+            echo "  lens     - Visual search selected region on Google Lens"
+            exit 1
+            ;;
+    esac
+}
+
+cmd_lock() {
+    ipc_call lock lock
+}
+
+cmd_dnd() {
+    local action="${1:-toggle}"
+    case "$action" in
+        toggle) ipc_call notifs toggleDnd ;;
+        on|enable) ipc_call notifs enableDnd ;;
+        off|disable) ipc_call notifs disableDnd ;;
+        status) ipc_call notifs getDnd ;;
+        *)
+            echo "Usage: caelestia dnd [toggle|on|off|status]"
+            exit 1
+            ;;
+    esac
+}
+
+cmd_media() {
+    local action="${1:-toggle}"
+    case "$action" in
+        toggle)       ipc_call drawers toggle media ;;
+        play-pause)   ipc_call mpris playPause ;;
+        play)         ipc_call mpris play ;;
+        pause)        ipc_call mpris pause ;;
+        next)         ipc_call mpris next ;;
+        prev|previous) ipc_call mpris previous ;;
+        stop)         ipc_call mpris stop ;;
+        list)         ipc_call mpris list ;;
+        *)
+            echo "Usage: caelestia media [toggle|play-pause|play|pause|next|prev|stop|list]"
+            exit 1
+            ;;
+    esac
+}
+
+cmd_toast() {
+    local title="${1:-Notification}"
+    local message="${2:-}"
+    local icon="${3:-info}"
+    local level="${4:-info}"
+
+    case "$level" in
+        success) ipc_call toaster success "$title" "$message" "$icon" ;;
+        warn|warning) ipc_call toaster warn "$title" "$message" "$icon" ;;
+        error) ipc_call toaster error "$title" "$message" "$icon" ;;
+        *) ipc_call toaster info "$title" "$message" "$icon" ;;
+    esac
+}
+
+cmd_ipc() {
+    if [[ $# -eq 0 || "$1" == "show" ]]; then
+        quickshell -p "$REPO_ROOT/shell.qml" ipc show 2>/dev/null || quickshell -c niri-caelestia-shell ipc show
+        return 0
+    fi
+
+    local target="$1"
+    local func="$2"
+    shift 2 || true
+    ipc_call "$target" "$func" "$@"
+}
+
 cmd_uninstall() {
     print_banner
     echo -e "${C_RED}${C_BOLD}WARNING: Caelestia Shell Clean Uninstall${C_RESET}"
@@ -319,6 +533,7 @@ cmd_uninstall() {
 
     echo -e "${C_CYAN}[caelestia]${C_RESET} Stopping any running shells..."
     pkill -f "quickshell.*shell\.qml" 2>/dev/null || true
+    pkill -f "qs" 2>/dev/null || true
 
     echo -e "${C_CYAN}[caelestia]${C_RESET} Removing symlink..."
     rm -f "$HOME/.local/bin/caelestia"
@@ -351,17 +566,43 @@ SUBCOMMAND="$1"
 shift
 
 case "$SUBCOMMAND" in
-    install)    cmd_install "$@" ;;
-    doctor)     cmd_doctor "$@" ;;
-    update)     cmd_update "$@" ;;
-    repair)     cmd_repair "$@" ;;
-    status)     cmd_status "$@" ;;
-    theme)      cmd_theme "$@" ;;
-    switch)     cmd_switch "$@" ;;
-    restart)    cmd_restart "$@" ;;
-    start)      cmd_start "$@" ;;
-    stop)       cmd_stop "$@" ;;
-    uninstall)  cmd_uninstall "$@" ;;
+    install)        cmd_install "$@" ;;
+    doctor)         cmd_doctor "$@" ;;
+    update)         cmd_update "$@" ;;
+    repair)         cmd_repair "$@" ;;
+    status)         cmd_status "$@" ;;
+    theme)          cmd_theme "$@" ;;
+    switch)         cmd_switch "$@" ;;
+    restart|reload) cmd_restart "$@" ;;
+    start)          cmd_start "$@" ;;
+    stop)           cmd_stop "$@" ;;
+    log)            cmd_log "$@" ;;
+    uninstall)      cmd_uninstall "$@" ;;
+
+    # Shell Drawer & Window controls
+    launcher)       cmd_launcher "$@" ;;
+    controlcenter|cc) cmd_controlcenter "$@" ;;
+    quicktoggles|qt)  cmd_quicktoggles "$@" ;;
+    session)        cmd_session "$@" ;;
+    overview)       cmd_overview "$@" ;;
+    manga)          cmd_manga "$@" ;;
+    novel)          cmd_novel "$@" ;;
+    drawer)         cmd_drawer "$@" ;;
+
+    # Tools & Productivity
+    clipboard)      cmd_clipboard "$@" ;;
+    capture)        cmd_capture "$@" ;;
+    ocr)            cmd_capture ocr "$@" ;;
+    lens)           cmd_capture lens "$@" ;;
+    lock)           cmd_lock "$@" ;;
+    dnd)            cmd_dnd "$@" ;;
+    media)          cmd_media "$@" ;;
+    play-pause)     cmd_media play-pause ;;
+    next)           cmd_media next ;;
+    prev|previous)  cmd_media prev ;;
+    toast)          cmd_toast "$@" ;;
+    ipc)            cmd_ipc "$@" ;;
+
     -v|--version|version) cmd_version ;;
     -h|--help|help)       print_help ;;
     *)

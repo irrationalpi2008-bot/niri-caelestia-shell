@@ -39,19 +39,24 @@ https://github.com/user-attachments/assets/0840f496-575c-4ca6-83a8-87bb01a85c5f
 
 ## ✨ Features & Tweaks
 
-Based on [AyushKr2003's niri-caelestia-shell](https://github.com/AyushKr2003/niri-caelestia-shell) and [jutraim](https://github.com/jutraim/niri-caelestia-shell):
+Based on [AyushKr2003's niri-caelestia-shell](https://github.com/AyushKr2003/niri-caelestia-shell) and [jutraim](https://github.com/jutraim/niri-caelestia-shell), with extensive modern performance improvements and a complete CLI management suite:
 
-- **Core C++ Optimizations (In Progress)**: Offloading heavy background tasks and polling to native C++ Qt plugins for lower memory and CPU usage
-- **Config Editor**: Visual JSON editor with searchable icon/font pickers, array editing (battery warnings, idle timeouts), nested object support
-- **Battery Monitor**: Configurable warning notifications at custom levels with icons and messages
-- **Enhanced Workspace Bar**: Program icons, drag-to-reorder windows, context menus, app grouping
-- **System Monitor**: Real-time CPU/GPU/Memory stats (AMD/NVIDIA, no Intel yet)
-- **Niri Integration**: Dashboard controls for Niri IPC commands
-- **Launcher Modes**: Integrated clipboard, web search, calculator, and more — all triggered via `>` prefix
-- **OCR & Google Lens**: Region picker modes for text extraction (Tesseract) and visual search (Google Lens)
-- **Area Picker Modes**: Custom cursor indicators for screenshot, OCR, and Lens modes
-
-All built on top of the Niri window manager adaptation from the upstream fork.
+- **⚡ Core C++ Engine Optimizations**:
+  - **Native C++ Fuzzy Search**: Instant, zero-latency application filtering in `AppDb` and `CUtils` without JavaScript garbage collection pauses.
+  - **In-Process Telemetry**: `/proc/cpuinfo` and `/proc/net/dev` parsed directly in C++ (`SysMonitor`), calculating CPU usage percentages, network download/upload rates, and sparkline history ring buffers in native code.
+  - **Zero-Process Brightness**: Direct `/sys/class/backlight` sysfs reading, eliminating shell spawns (`sh -c echo $(brightnessctl ...)`).
+  - **On-Demand Drawer Loading**: Heavy components like the Manga and Novel readers are wrapped in lazy `Loader` components to keep idle RAM minimal.
+- **🛠 Unified `caelestia` CLI Suite**: Comprehensive single-command control for every feature in the shell—from application launchers, screenshot/OCR capture, and clipboard management, to system doctor diagnostics and automated updates.
+- **⚡ Automated One-Command Installer**: Non-destructive installer that configures system/AUR packages, creates a dedicated Python venv for Material You color generation, compiles native C++ plugins, and verifies installation health.
+- **🎨 Dynamic Material You Theming**: Live wallpaper-driven palette generation powered by `python-materialyoucolor` with 9 scheme variants, light/dark modes, and seamless cross-app sync.
+- **🔍 AI & Productivity Screen Capture**: Integrated area picker with custom cursor indicators for region screenshots (with Swappy editor), OCR text extraction to clipboard via Tesseract, and Google Lens visual search.
+- **📋 Integrated Clipboard Manager**: Built-in clipboard history drawer backed by `cliphist` and `wl-clipboard`, with quick clear capabilities.
+- **⚙️ Visual Config Editor**: Full graphical JSON editor with searchable icon/font pickers, array editing (battery warnings, idle timeouts), and nested object support.
+- **🔋 Intelligent Battery Monitor**: Configurable warning notifications at custom battery thresholds with specialized icons, alert levels, and messages.
+- **📊 Enhanced Workspace Bar**: Program icons, drag-to-reorder windows, context menus, app grouping, and active window indicators.
+- **💻 Real-Time System Monitor**: CPU, GPU (AMD/NVIDIA), and Memory resource monitoring with live graphs and network bandwidth tracking.
+- **📚 Built-in Readers**: Built-in lazy-loaded Manga and Light Novel readers accessible directly from the drawer system.
+- **🔀 Shell Switcher**: Seamless instant switching between Caelestia Shell and your default/inir shell without losing your session.
 
 ---
 
@@ -62,12 +67,10 @@ You need both runtime dependencies and development headers.
 <br>
 
 * All dependencies in plain text:
-   * `quickshell-git networkmanager fish glibc qt6-declarative gcc-libs cava libcava aubio libpipewire ddcutil brightnessctl ttf-material-icons-git ttf-jetbrains-mono grim swappy app2unit libqalculate python-materialyoucolor wl-clipboard cliphist tesseract tesseract-data-eng curl`
+   * `quickshell-git networkmanager fish glibc qt6-declarative gcc-libs cava libcava aubio libpipewire ddcutil brightnessctl ttf-material-icons-git ttf-jetbrains-mono grim swappy app2unit libqalculate python-materialyoucolor wl-clipboard cliphist tesseract tesseract-data-eng curl jq`
 
 > [!NOTE]
->
-> Unlike the default shell,
-> [`caelestia-cli`](https://github.com/caelestia-dots/cli) is **not required for Niri**.
+> Unlike the default Hyprland shell, [`caelestia-cli`](https://github.com/caelestia-dots/cli) is **not required for Niri**. Everything is powered by the built-in `caelestia` CLI suite included in this repository.
 
 <details><summary> <b> Detailed info about all dependencies </b></summary>
 
@@ -78,29 +81,26 @@ You need both runtime dependencies and development headers.
 | Core | `quickshell-git`, `networkmanager`, `networkmanager-qt`, `fish`, `glibc`, `qt6-declarative`, `gcc-libs` |
 | Audio & Visual | `cava`, `libcava`, `aubio`, `libpipewire`, `ddcutil`, `brightnessctl`, `materialyoucolor` |
 | Fonts | `ttf-material-icons-git`, `ttf-jetbrains-mono` |
-| Screenshot & Utils | `grim`, `swappy`, `app2unit`, `libqalculate`, `tesseract`, `tesseract-data-eng`, `curl` |
+| Screenshot & Utils | `grim`, `swappy`, `app2unit`, `libqalculate`, `tesseract`, `tesseract-data-eng`, `curl`, `jq` |
 | Clipboard | `wl-clipboard`, `cliphist` |
-| Build | `cmake`, `ninja` |
-
+| Build | `cmake`, `ninja`, `gcc` |
 
 </div>
-
 
 ### Manual installation
 
 To install the shell manually, install all dependencies and clone this repo to `~/.config/quickshell/niri-caelestia-shell`.
 Then simply build and install using `cmake`.
 
-
 </details>
 
 ---
 
-## ⚡ Installation & CLI Suite
+## ⚡ Installation & Automated Setup
 
-### Automated One-Command Installation (Arch Linux)
+### Automated One-Command Installation (Arch Linux / Arch-based)
 
-For a fully automated setup (system & AUR dependencies, Python venv for Material You theming, native C++ QML plugin compilation, initial palette generation, and the `caelestia` CLI suite):
+For a fully automated setup that handles package installation, Python virtual environment configuration, native C++ QML plugin compilation, initial palette generation, and CLI symlinking:
 
 ```sh
 git clone https://github.com/irrationalpi2008-bot/niri-caelestia-shell
@@ -109,149 +109,167 @@ cd niri-caelestia-shell
 ```
 
 > [!TIP]
-> The automated installer is completely non-destructive: your personal Niri configuration (`~/.config/niri/config.kdl`) is left untouched!
+> **Safe & Non-Destructive**: The installer will **never** overwrite or modify your personal Niri configuration (`~/.config/niri/config.kdl`).
+
+#### Installer Options:
+| Flag | Description |
+| :--- | :--- |
+| `--skip-deps` | Skip installing system (Pacman) and AUR packages |
+| `--skip-build` | Skip compiling the native C++ QML plugin |
+| `--skip-python` | Skip configuring the Python Material You virtual environment |
+| `-y, --yes` | Run non-interactively without pause prompts |
+| `-h, --help` | Display installer options and usage |
 
 ---
 
-### 🛠 The `caelestia` CLI Suite
+## 🛠 The `caelestia` CLI Suite
 
-Once installed, the unified `caelestia` command is available in your PATH:
+The `caelestia` command is automatically symlinked into `~/.local/bin/caelestia` during installation, providing comprehensive control over every feature of the shell.
 
 ```sh
-# System health check & diagnostic doctor
-caelestia doctor
-caelestia doctor --fix    # or: caelestia repair
-
-# Keep your shell up-to-date
-caelestia update          # Git pull, auto-recompile C++ plugins if needed, and reload
-caelestia update --check  # Check if new commits exist upstream without applying
-
-# Shell state & monitoring
-caelestia status          # Inspect active shell, PID, memory, compositor, and theme palette
-caelestia switch          # Toggle between Caelestia and your default/inir shell
-
-# Live Dynamic Material You Theming
-caelestia theme ~/Pictures/wall.jpg --mode dark --variant scheme-vibrant
+caelestia <command> [arguments...]
 ```
 
-### Manual Build
+### 1. Lifecycle, Health & Maintenance
+| Command | Description |
+| :--- | :--- |
+| `caelestia doctor` | Inspect system health, dependencies, Python venv, and C++ plugin compilation |
+| `caelestia doctor --fix` (or `repair`) | Automatically diagnose and repair build artifacts, missing venv, or broken cache |
+| `caelestia update` | Smart git pull, conditionally rebuild C++ plugins if changed, and reload shell |
+| `caelestia status` | Display active shell instance, PID, RSS memory, compositor, and current theme |
+| `caelestia start` | Launch Caelestia shell |
+| `caelestia stop` | Gracefully terminate running shell instances |
+| `caelestia restart` (or `reload`) | Restart the active Caelestia shell process |
+| `caelestia switch [caelestia\|inir]` | Instantly toggle between Caelestia and your default/inir shell |
+| `caelestia log` | Stream live Quickshell logs in real time |
+| `caelestia uninstall` | Safely clean up build artifacts, venv, state cache, and symlinks |
 
-1. Install dependencies.
-2. Clone the repo:
+### 2. Live Dynamic Theming (Material You)
+| Command | Description |
+| :--- | :--- |
+| `caelestia theme <image_path>` | Set new wallpaper and regenerate full system Material You color scheme |
+| `caelestia theme <image> --mode <dark\|light>` | Set theme lightness mode (dark or light) |
+| `caelestia theme <image> --variant <type>` | Choose Material 3 palette variant |
+| `caelestia theme get` | Print the path of the currently active wallpaper |
+| `caelestia theme list` | List available wallpapers in your wallpapers directory |
 
+> **Available Palette Variants**: `scheme-tonal-spot` (default), `scheme-vibrant`, `scheme-expressive`, `scheme-rainbow`, `scheme-fruit-salad`, `scheme-monochrome`, `scheme-neutral`, `scheme-fidelity`, `scheme-content`.
+
+### 3. Drawers & Navigation
+| Command | Description |
+| :--- | :--- |
+| `caelestia launcher` | Toggle application launcher drawer (with native C++ fuzzy search) |
+| `caelestia controlcenter` (or `cc`) | Open the Control Center settings window |
+| `caelestia quicktoggles` (or `qt`) | Toggle the Quick Toggles panel |
+| `caelestia session` | Toggle the session / power menu drawer |
+| `caelestia overview` | Toggle the workspace overview drawer |
+| `caelestia manga` | Toggle the built-in Manga Reader drawer |
+| `caelestia novel` | Toggle the built-in Light Novel Reader drawer |
+| `caelestia drawer <name>` | Toggle any drawer by name (`launcher`, `session`, `media`, `overview`, `manga`, `novel`) |
+
+### 4. Productivity & Screen Capture Tools
+| Command | Description |
+| :--- | :--- |
+| `caelestia capture region` (or `capture`) | Interactive region screenshot with Swappy editor |
+| `caelestia capture freeze` | Freeze-screen interactive region screenshot |
+| `caelestia capture ocr` (or `caelestia ocr`) | Select a region on screen to extract text directly to clipboard via Tesseract OCR |
+| `caelestia capture lens` (or `caelestia lens`) | Select a screen region to perform visual search on Google Lens |
+| `caelestia clipboard toggle` | Toggle the clipboard history drawer |
+| `caelestia clipboard clear` | Wipe clipboard history and clear `wl-clipboard` / `cliphist` |
+| `caelestia lock` | Lock your desktop via the Caelestia lockscreen |
+| `caelestia dnd [toggle\|on\|off\|status]` | Toggle or set Do Not Disturb notification mode |
+| `caelestia toast <title> <msg> [icon] [level]` | Send a custom on-screen notification toast (`info`, `success`, `warn`, `error`) |
+
+### 5. Media Playback & Controls
+| Command | Description |
+| :--- | :--- |
+| `caelestia media` | Toggle the media player drawer |
+| `caelestia media play-pause` (or `play-pause`) | Toggle playback on active MPRIS player |
+| `caelestia media next` (or `next`) | Skip to the next track |
+| `caelestia media prev` (or `prev`) | Skip to the previous track |
+
+### 6. Developer & Universal IPC
+| Command | Description |
+| :--- | :--- |
+| `caelestia ipc show` | Print all live registered IPC targets and available methods in the running shell |
+| `caelestia ipc <target> <function> [args...]` | Call any IpcHandler directly in the running shell |
+
+---
+
+### Manual Build (Alternative)
+
+If you prefer building manually without the automated installer:
+
+1. Install dependencies:
+    ```sh
+    sudo pacman -S --needed quickshell-git networkmanager fish glibc qt6-declarative gcc-libs cava libcava aubio libpipewire ddcutil brightnessctl ttf-jetbrains-mono grim swappy app2unit libqalculate wl-clipboard cliphist tesseract tesseract-data-eng curl jq cmake ninja gcc
+    ```
+2. Clone repository & build C++ plugins:
     ```sh
     cd ~/.config/quickshell
     git clone https://github.com/irrationalpi2008-bot/niri-caelestia-shell
-    ```
-3. Build:
-
-    ```sh
-    cd ~/.config/quickshell/niri-caelestia-shell
-    cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/
+    cd niri-caelestia-shell
+    cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
     cmake --build build
-    sudo cmake --install build
     ```
-    It's trying to install into system paths (`/usr/lib/qt6/qml/Caelestia/...`),
-    so grab the necessary permissions or use sudo while installing.
-
-    If you get `VERSION is not set and failed to get from git` error, that means I forgot to tag version. You can do `git tag 1.1.1` to work around it :)
-
-4. Run the setup script (installs system packages, Python venv, services):
-
+3. Run setup & link CLI:
     ```sh
-    ./scripts/setup/setup.sh
+    mkdir -p ~/.local/bin
+    ln -sf "$PWD/bin/caelestia" ~/.local/bin/caelestia
+    caelestia doctor --fix
     ```
 
-    > The setup script supports flags: `--skip-deps`, `--skip-python`, `--skip-services`
+---
 
-5. Deploy dotfiles:
+## 🚀 Usage with Niri
 
-    ```sh
-    cp -r dotfiles/.config/* ~/.config/
-    ```
-
-    > [!IMPORTANT]
-    > Copying the `matugen` folder to `~/.config/` is **mandatory** for system-wide color syncing to work.
-
-6. (Optional) Setup SDDM Theme:
-
-    ```sh
-    bash dotfiles/niri-caelestia-sddm/setup.sh
-    ```
-    > Select option `1` during setup to sync colors directly with the shell.
-
-<!-- 
-    
-    cmake -B build -G Ninja \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=$HOME \
-    -DINSTALL_QSCONFDIR=$HOME/.config/quickshell/niri-caelestia-shell
-    cmake --build build
-    cmake --install build
-    
-    run it by 
-    QML_IMPORT_PATH=$HOME/usr/lib/qt6/qml qs -c niri-caelestia-shell
-    so that it won't overlap with hyprland caelestia -->
-
-### 🔃 Updating
-You can update by running `git pull` in `~/.config/quickshell/niri-caelestia-shell`.
-
+You can start the shell directly with `caelestia start` or via:
 ```sh
-cd ~/.config/quickshell/niri-caelestia-shell
-git pull
+qs -c niri-caelestia-shell
+# or:
+qs -p /path/to/niri-caelestia-shell/shell.qml
 ```
 
----
+### Auto-start in `config.kdl`
+Add this line to your `~/.config/niri/config.kdl`:
+```kdl
+spawn-at-startup "caelestia" "start"
+```
 
-## Theme Setup
+### Recommended Shortcuts in `config.kdl`
+Using the `caelestia` CLI makes your Niri keybindings clean, readable, and robust:
 
-Detailed prerequisites and step-by-step setup for wallpaper-driven theming are provided in `THEME.md`. See: [THEME.md](THEME.md)
+```kdl
+binds {
+    // Shell Drawers & Menus
+    Mod+Space repeat=false { spawn "caelestia" "launcher"; }
+    Mod+V repeat=false     { spawn "caelestia" "clipboard" "toggle"; }
+    Mod+Shift+C            { spawn "caelestia" "controlcenter"; }
+    Ctrl+Alt+Delete        { spawn "caelestia" "session"; }
+    Mod+Tab repeat=false   { spawn "caelestia" "overview"; }
 
----
+    // Screen Capture & AI Tools
+    Print                  { spawn "caelestia" "capture" "region"; }
+    Mod+Shift+S            { spawn "caelestia" "capture" "freeze"; }
+    Mod+Shift+O            { spawn "caelestia" "capture" "ocr"; }
+    Mod+Shift+L            { spawn "caelestia" "capture" "lens"; }
 
-## 🚀 Usage
+    // Desktop Lock & DND
+    Mod+L                  { spawn "caelestia" "lock"; }
+    Mod+Shift+D            { spawn "caelestia" "dnd" "toggle"; }
 
-The shell can be started via the `qs -c niri-caelestia-shell` on your preferred terminal.
-<sub> (`qs` and `quickshell` are interchangable.) </sub>
+    // Media Keys
+    XF86AudioPlay          { spawn "caelestia" "media" "play-pause"; }
+    XF86AudioNext          { spawn "caelestia" "media" "next"; }
+    XF86AudioPrev          { spawn "caelestia" "media" "prev"; }
+}
+```
 
+<details><summary> <b> Raw Low-Level IPC Commands & Targets Reference </b></summary>
 
-* Example line for niri `config.kdl` to launch the shell at startup:
-
-   ```
-   spawn-at-startup "quickshell" "-c" "niri-caelestia-shell" "-n"
-   ```
-
-### Custom Shortcuts/IPC
-
-
-All IPC commands can be called via `quickshell -c niri-caelestia-shell ipc call ...`
-
-* For example:
-
-   ```sh
-   qs -c niri-caelestia-shell ipc call mpris getActive <trackTitle>
-   ```
-
-* Example shortcut in `config.kdl` to toggle the launcher drawer:
-    ```sh
-    Mod+Space { spawn  "qs" "-c" "niri-caelestia-shell" "ipc" "call" "drawers" "toggle" "launcher"; }
-    ```
-
-    ```sh
-    Mod+Space hotkey-overlay-title="Caelestia app launcher" { spawn-sh "qs -c niri-caelestia-shell ipc call drawers toggle launcher"; }
-    ```
-
-<br>
-
- The list of IPC commands can be shown via `qs -c niri-caelestia-shell ipc show`.
-
-<br>
-
-<details><summary> <b> Ipc Commands </b></summary>
-
-  ```sh
-  ❯ qs -c niri-caelestia-shell ipc show
-  target picker
+```sh
+❯ caelestia ipc show
+target picker
     function open(): void
     function openFreeze(): void
     function regionOcr(): void
@@ -323,7 +341,7 @@ layer-rule {
 // Startup commands
 spawn-sh-at-startup "wl-paste --type text --watch cliphist store &"
 spawn-sh-at-startup "wl-paste --type image --watch cliphist store &"
-spawn-sh-at-startup "qs -c niri-caelestia-shell"
+spawn-at-startup "caelestia" "start"
 
 environment {
     XDG_CURRENT_DESKTOP "niri"
@@ -341,22 +359,25 @@ binds {
     Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }
     
     // Launcher
-    Mod+Space repeat=false { spawn-sh "qs -c niri-caelestia-shell ipc call drawers toggle launcher"; }
+    Mod+Space repeat=false { spawn "caelestia" "launcher"; }
     
     // Clipboard
-    Mod+V repeat=false { spawn-sh "qs -c niri-caelestia-shell ipc call clipboard open"; } 
+    Mod+V repeat=false { spawn "caelestia" "clipboard" "toggle"; } 
+
+    // Control Center
+    Mod+Shift+C { spawn "caelestia" "controlcenter"; }
     
     // Lock screen
-    Mod+L { spawn-sh "qs -c niri-caelestia-shell ipc call lock lock"; }
+    Mod+L { spawn "caelestia" "lock"; }
     
     // Region/Screenshot tools
-    Mod+Shift+S { spawn-sh "qs -c niri-caelestia-shell ipc call picker open"; }
+    Mod+Shift+S { spawn "caelestia" "capture" "region"; }
     
     // OCR (extract text from screen region)
-    Mod+Shift+X { spawn-sh "qs -c niri-caelestia-shell ipc call picker regionOcr"; }
+    Mod+Shift+X { spawn "caelestia" "capture" "ocr"; }
     
     // Google Lens (visual search from screen region)
-    Mod+Shift+A { spawn-sh "qs -c niri-caelestia-shell ipc call picker regionSearch"; }
+    Mod+Shift+A { spawn "caelestia" "capture" "lens"; }
     
     // Applications (change "kitty" to your preferred terminal)
     Mod+T { spawn "kitty"; }
@@ -384,12 +405,17 @@ binds {
     XF86AudioMute allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"; }
     XF86AudioMicMute allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"; }
 
+    // Media keys
+    XF86AudioPlay { spawn "caelestia" "media" "play-pause"; }
+    XF86AudioNext { spawn "caelestia" "media" "next"; }
+    XF86AudioPrev { spawn "caelestia" "media" "prev"; }
+
     // Brightness (hardware keys) - change eDP-1 to your monitor name by running "niri msg outputs"
-    XF86MonBrightnessUp { spawn-sh "qs -c niri-caelestia-shell ipc call brightness setFor eDP-1 +5%"; }
-    XF86MonBrightnessDown { spawn-sh "qs -c niri-caelestia-shell ipc call brightness setFor eDP-1 10%-"; }
+    XF86MonBrightnessUp { spawn "caelestia" "ipc" "brightness" "setFor" "eDP-1" "+5%"; }
+    XF86MonBrightnessDown { spawn "caelestia" "ipc" "brightness" "setFor" "eDP-1" "10%-"; }
     
     // Session/Power menu
-    Ctrl+Alt+Delete { spawn-sh "qs -c niri-caelestia-shell ipc call drawers toggle session"; }
+    Ctrl+Alt+Delete { spawn "caelestia" "session"; }
 }
 
 layer-rule {
