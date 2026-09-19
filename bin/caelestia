@@ -8,7 +8,6 @@
 #   repair        Automatically repair build artifacts, venv, and state
 #   status        Display active shell instance, PID, memory, and theming info
 #   theme         Change wallpaper, adjust theme flavor, or display scheme info
-#   switch        Quickly switch between Caelestia and your default/inir shell
 #   restart       Restart the active Caelestia shell process
 #   start         Launch Caelestia shell
 #   stop          Stop Caelestia shell
