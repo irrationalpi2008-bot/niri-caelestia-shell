@@ -49,6 +49,19 @@ double SysMonitor::cpuPerc() const { return m_cpuPerc; }
 QString SysMonitor::cpuModelClean() const { return m_cpuModelClean; }
 QString SysMonitor::gpuNameClean() const { return m_gpuNameClean; }
 
+double SysMonitor::memUsed() const { return m_memUsed; }
+double SysMonitor::memTotalVal() const { return m_memTotalVal; }
+double SysMonitor::memPerc() const { return m_memPerc; }
+double SysMonitor::storagePerc() const { return m_storagePerc; }
+QVariantList SysMonitor::formattedDisks() const { return m_formattedDisks; }
+bool SysMonitor::trackProcesses() const { return m_trackProcesses; }
+void SysMonitor::setTrackProcesses(bool track) {
+    if (m_trackProcesses != track) {
+        m_trackProcesses = track;
+        emit trackProcessesChanged();
+    }
+}
+
 double SysMonitor::downloadSpeed() const { return m_downloadSpeed; }
 double SysMonitor::uploadSpeed() const { return m_uploadSpeed; }
 double SysMonitor::downloadTotal() const { return m_downloadTotal; }
@@ -121,7 +134,9 @@ void SysMonitor::updateAll() {
     updateCpu();
     updateNetwork();
     updateDisk();
-    updateProcesses();
+    if (m_trackProcesses) {
+        updateProcesses();
+    }
     updateDiskmounts();
     updateGpu();
 }
@@ -157,6 +172,12 @@ void SysMonitor::updateMemory() {
     }
     
     m_memTotalKB = memTotal > 0 ? memTotal : 1;
+
+    const qint64 available = memAvailable > 0 ? memAvailable : (memFree + buffers + cached);
+    const qint64 usedKB = memTotal > available ? (memTotal - available) : 0;
+    m_memTotalVal = static_cast<double>(memTotal > 0 ? memTotal : 1);
+    m_memUsed = static_cast<double>(usedKB);
+    m_memPerc = m_memTotalVal > 0.0 ? (m_memUsed / m_memTotalVal) : 0.0;
 
     QVariantMap newMem;
     newMem.insert("total", memTotal);
@@ -476,11 +497,11 @@ void SysMonitor::updateProcesses() {
         QFile statFile(QString("/proc/%1/stat").arg(pid));
         if (!statFile.open(QIODevice::ReadOnly | QIODevice::Text)) continue;
         
-        QString statContent = statFile.readAll();
+        QString statContent = QString::fromUtf8(statFile.readAll());
         // Comm name is enclosed in parenthesis
-        int leftParen = statContent.indexOf("(");
-        int rightParen = statContent.lastIndexOf(")");
-        if(leftParen == -1 || rightParen == -1) continue;
+        qsizetype leftParen = statContent.indexOf(QLatin1Char('('));
+        qsizetype rightParen = statContent.lastIndexOf(QLatin1Char(')'));
+        if (leftParen == -1 || rightParen == -1) continue;
 
         QString comm = statContent.mid(leftParen + 1, rightParen - leftParen - 1);
         QString afterCommm = statContent.mid(rightParen + 2);
@@ -491,17 +512,16 @@ void SysMonitor::updateProcesses() {
         int ppid = parts[1].toInt();
         qint64 utime = parts[11].toLongLong();
         qint64 stime = parts[12].toLongLong();
-        qint64 starttime = parts[19].toLongLong();
         qint64 rss = parts[21].toLongLong(); // blocks 
 
         // Rss is allocated in pages, multiply by page size
-        qint64 memoryKbs = (rss * sysconf(_SC_PAGESIZE)) / 1024;
+        qint64 memoryKbs = (rss * sysconf(_SC_PAGESIZE)) / 1024LL;
         
         ProcessInfo pi;
         pi.pid = pid;
         pi.ppid = ppid;
         pi.memoryKB = memoryKbs;
-        pi.memoryPercent = (double)pi.memoryKB / (double)m_memTotalKB * 100.0;
+        pi.memoryPercent = static_cast<double>(pi.memoryKB) / static_cast<double>(m_memTotalKB) * 100.0;
         pi.command = comm;
         pi.utime = utime;
         pi.stime = stime;
@@ -511,9 +531,9 @@ void SysMonitor::updateProcesses() {
         if (m_lastProcesses.contains(pid)) {
              ProcessInfo lastPi = m_lastProcesses[pid];
              qint64 total_time = (pi.utime + pi.stime) - (lastPi.utime + lastPi.stime);
-             double seconds = ((double)m_updateInterval / 1000.0); // Exact elapsed interval roughly
+             double seconds = static_cast<double>(m_updateInterval) / 1000.0; // Exact elapsed interval roughly
              if (seconds > 0) {
-                 pi.cpu = 100.0 * ((double)total_time / (double)m_clockTicks) / seconds;
+                 pi.cpu = 100.0 * (static_cast<double>(total_time) / static_cast<double>(m_clockTicks)) / seconds;
              }
         }
         
@@ -540,7 +560,7 @@ void SysMonitor::updateProcesses() {
         return a.command < b.command; // default name a-z
     });
     
-    int limit = qMin(m_maxProcesses, list.size());
+    int limit = qMin(m_maxProcesses, static_cast<int>(list.size()));
     for(int i = 0; i < limit; i++) {
         QVariantMap p;
         p["pid"] = list[i].pid;
@@ -566,31 +586,52 @@ void SysMonitor::updateProcesses() {
 
 void SysMonitor::updateDiskmounts() {
     QVariantList newMounts;
+    QVariantList newFormattedDisks;
+    qint64 totalStorageUsedKB = 0;
+    qint64 totalStorageSizeKB = 0;
+
     for (const QStorageInfo &storage : QStorageInfo::mountedVolumes()) {
-        if (storage.isValid() && storage.isReady()) {
-            if (!storage.isReadOnly()) {
-                QString fsType = QString::fromUtf8(storage.fileSystemType());
-                if (fsType == "tmpfs" || fsType == "devtmpfs") continue;
-                
-                QVariantMap m;
-                m["device"] = QString::fromUtf8(storage.device());
-                m["mount"] = storage.rootPath();
-                m["fstype"] = fsType;
-                
-                qint64 size = storage.bytesTotal();
-                qint64 avail = storage.bytesAvailable();
-                qint64 used = size - avail;
-                
-                m["size"] = size / (1024 * 1024 * 1024); // GB roughly
-                m["used"] = used / (1024 * 1024 * 1024);
-                m["avail"] = avail / (1024 * 1024 * 1024);
-                m["percent"] = size > 0 ? (used * 100) / size : 0;
-                
-                newMounts.append(m);
+        if (storage.isValid() && storage.isReady() && !storage.isReadOnly()) {
+            const QString fsType = QString::fromUtf8(storage.fileSystemType());
+            if (fsType == "tmpfs" || fsType == "devtmpfs" || fsType == "overlay" || fsType == "squashfs") {
+                continue;
             }
+
+            const qint64 size = storage.bytesTotal();
+            const qint64 avail = storage.bytesAvailable();
+            const qint64 used = size - avail;
+
+            QVariantMap m;
+            m["device"] = QString::fromUtf8(storage.device());
+            m["mount"] = storage.rootPath();
+            m["fstype"] = fsType;
+            m["size"] = size / (1024LL * 1024LL * 1024LL);
+            m["used"] = used / (1024LL * 1024LL * 1024LL);
+            m["avail"] = avail / (1024LL * 1024LL * 1024LL);
+            m["percent"] = size > 0 ? (used * 100LL) / size : 0LL;
+            newMounts.append(m);
+
+            const qint64 usedKB = used / 1024LL;
+            const qint64 totalKB = size / 1024LL;
+            const qint64 freeKB = avail / 1024LL;
+            const double perc = size > 0 ? static_cast<double>(used) / static_cast<double>(size) : 0.0;
+
+            QVariantMap fd;
+            fd["mount"] = QString::fromUtf8(storage.device());
+            fd["used"] = usedKB;
+            fd["total"] = totalKB;
+            fd["free"] = freeKB;
+            fd["perc"] = perc;
+            newFormattedDisks.append(fd);
+
+            totalStorageUsedKB += usedKB;
+            totalStorageSizeKB += totalKB;
         }
     }
-    
+
+    m_storagePerc = totalStorageSizeKB > 0 ? static_cast<double>(totalStorageUsedKB) / static_cast<double>(totalStorageSizeKB) : 0.0;
+    m_formattedDisks = newFormattedDisks;
+
     if (m_diskmounts != newMounts) {
         m_diskmounts = newMounts;
         emit diskmountsChanged();

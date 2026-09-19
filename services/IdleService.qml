@@ -23,7 +23,7 @@ Singleton {
     Timer {
         id: idleTimer
         interval: root.checkInterval
-        running: true
+        running: false
         repeat: true
         onTriggered: root.checkIdleState()
     }
@@ -52,10 +52,5 @@ Singleton {
                 console.warn("IdleService: Failed to check idle state, exit code:", exitCode);
             }
         }
-    }
-
-    Component.onCompleted: {
-        console.log("IdleService: Initialized with", root.idleThresholdSeconds + "s threshold");
-        checkIdleState();
     }
 }

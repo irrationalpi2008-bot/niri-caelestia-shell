@@ -2,6 +2,7 @@ pragma Singleton
 
 import qs.config
 import qs.utils
+import Caelestia
 import Quickshell
 import Quickshell.Io
 import QtQuick
@@ -34,10 +35,9 @@ Searcher {
                 const isDynamic = currentState.name === "dynamic";
                 currentState.variant = variantName;
 
-                // Save updated state via FileView
+                // Save updated state via CUtils atomic write
                 const jsonContent = JSON.stringify(currentState, null, 2);
-                ensureStateDirProcess._pendingContent = jsonContent;
-                ensureStateDirProcess.running = true;
+                CUtils.writeTextFile(root.schemeStatePath, jsonContent);
 
                 // Update the Schemes service current variant
                 Schemes.currentVariant = variantName;
@@ -52,21 +52,6 @@ Searcher {
                 }
             } catch (e) {
                 console.error("Failed to set variant:", e);
-            }
-        }
-    }
-
-    Process {
-        id: ensureStateDirProcess
-
-        property string _pendingContent
-
-        command: ["mkdir", "-p", Paths.state]
-        running: false
-
-        onExited: (exitCode, exitStatus) => {
-            if (exitCode === 0 && _pendingContent) {
-                schemeStateFile.setText(_pendingContent);
             }
         }
     }

@@ -4,10 +4,14 @@
 #include <QtConcurrent/qtconcurrentrun.h>
 #include <QtQuick/qquickitemgrabresult.h>
 #include <QtQuick/qquickwindow.h>
+#include <algorithm>
+#include <cmath>
+#include <qcolor.h>
 #include <qdir.h>
 #include <qfileinfo.h>
 #include <qfuturewatcher.h>
 #include <qqmlengine.h>
+#include <qsavefile.h>
 #include <vector>
 
 namespace caelestia {
@@ -205,6 +209,175 @@ QList<QObject*> CUtils::fuzzySearch(
         result.append(m.obj);
     }
     return result;
+}
+
+qreal CUtils::getLuminance(const QColor& c) const {
+    if (qFuzzyIsNull(c.redF()) && qFuzzyIsNull(c.greenF()) && qFuzzyIsNull(c.blueF())) {
+        return 0.0;
+    }
+    const double r = static_cast<double>(c.redF());
+    const double g = static_cast<double>(c.greenF());
+    const double b = static_cast<double>(c.blueF());
+    return std::sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b));
+}
+
+QColor CUtils::alterColour(
+    const QColor& c,
+    qreal a,
+    int layer,
+    bool light,
+    qreal baseTransparency,
+    qreal wallLuminance) const {
+    const qreal luminance = getLuminance(c);
+    if (luminance <= 0.0001) {
+        return QColor::fromRgbF(0.0f, 0.0f, 0.0f, static_cast<float>(std::clamp(a, 0.0, 1.0)));
+    }
+
+    const qreal layerFactor = (!light || layer == 1) ? 1.0 : (-static_cast<qreal>(layer) / 2.0);
+    const qreal lightFactor = light ? 0.2 : 0.3;
+    const qreal wallMult = light ? ((layer == 1) ? 3.0 : 1.0) : 2.5;
+    const qreal offset = layerFactor * lightFactor * (1.0 - baseTransparency) * (1.0 + wallLuminance * wallMult);
+    const qreal scale = (luminance + offset) / luminance;
+
+    const double r = std::clamp(static_cast<double>(c.redF()) * scale, 0.0, 1.0);
+    const double g = std::clamp(static_cast<double>(c.greenF()) * scale, 0.0, 1.0);
+    const double b = std::clamp(static_cast<double>(c.blueF()) * scale, 0.0, 1.0);
+    const double alpha = std::clamp(a, 0.0, 1.0);
+
+    return QColor::fromRgbF(
+        static_cast<float>(r),
+        static_cast<float>(g),
+        static_cast<float>(b),
+        static_cast<float>(alpha));
+}
+
+QColor CUtils::onColor(const QColor& c) const {
+    const float h = c.hslHueF() < 0.0f ? 0.0f : c.hslHueF();
+    const float s = std::clamp(c.hslSaturationF(), 0.0f, 1.0f);
+    const float l = c.lightnessF() < 0.5f ? 0.9f : 0.1f;
+    return QColor::fromHslF(h, s, l, 1.0f);
+}
+
+void CUtils::updateTransparentPalette(
+    QObject* targetTPalette,
+    QObject* sourcePalette,
+    bool transparencyEnabled,
+    qreal baseAlpha,
+    qreal layersAlpha,
+    bool light,
+    qreal wallLuminance) const {
+    if (!targetTPalette || !sourcePalette) {
+        return;
+    }
+
+    static const char* layer0Props[] = {
+        "m3background",
+        "m3surface",
+        "m3surfaceDim",
+        "m3surfaceBright",
+        "m3surfaceVariant",
+        "m3inverseSurface"
+    };
+
+    static const char* layer1Props[] = {
+        "m3primary_paletteKeyColor",
+        "m3secondary_paletteKeyColor",
+        "m3tertiary_paletteKeyColor",
+        "m3neutral_paletteKeyColor",
+        "m3neutral_variant_paletteKeyColor",
+        "m3onBackground",
+        "m3surfaceContainerLowest",
+        "m3surfaceContainerLow",
+        "m3surfaceContainer",
+        "m3surfaceContainerHigh",
+        "m3surfaceContainerHighest",
+        "m3onSurface",
+        "m3onSurfaceVariant",
+        "m3inverseOnSurface",
+        "m3outline",
+        "m3outlineVariant",
+        "m3shadow",
+        "m3scrim",
+        "m3surfaceTint",
+        "m3primary",
+        "m3onPrimary",
+        "m3primaryContainer",
+        "m3onPrimaryContainer",
+        "m3inversePrimary",
+        "m3secondary",
+        "m3onSecondary",
+        "m3secondaryContainer",
+        "m3onSecondaryContainer",
+        "m3tertiary",
+        "m3onTertiary",
+        "m3tertiaryContainer",
+        "m3onTertiaryContainer",
+        "m3error",
+        "m3onError",
+        "m3errorContainer",
+        "m3onErrorContainer",
+        "m3primaryFixed",
+        "m3primaryFixedDim",
+        "m3onPrimaryFixed",
+        "m3onPrimaryFixedVariant",
+        "m3secondaryFixed",
+        "m3secondaryFixedDim",
+        "m3onSecondaryFixed",
+        "m3onSecondaryFixedVariant",
+        "m3tertiaryFixed",
+        "m3tertiaryFixedDim",
+        "m3onTertiaryFixed",
+        "m3onTertiaryFixedVariant"
+    };
+
+    for (const char* prop : layer0Props) {
+        const QVariant val = sourcePalette->property(prop);
+        if (!val.isValid()) {
+            continue;
+        }
+        QColor targetColor = val.value<QColor>();
+        if (transparencyEnabled) {
+            targetColor.setAlphaF(static_cast<float>(std::clamp(baseAlpha, 0.0, 1.0)));
+        }
+        if (targetTPalette->property(prop).value<QColor>() != targetColor) {
+            targetTPalette->setProperty(prop, targetColor);
+        }
+    }
+
+    for (const char* prop : layer1Props) {
+        const QVariant val = sourcePalette->property(prop);
+        if (!val.isValid()) {
+            continue;
+        }
+        const QColor c = val.value<QColor>();
+        QColor targetColor = c;
+        if (transparencyEnabled) {
+            targetColor = alterColour(c, layersAlpha, 1, light, baseAlpha, wallLuminance);
+        }
+        if (targetTPalette->property(prop).value<QColor>() != targetColor) {
+            targetTPalette->setProperty(prop, targetColor);
+        }
+    }
+}
+
+bool CUtils::writeTextFile(const QString& path, const QString& content) const {
+    const QFileInfo fi(path);
+    const QDir dir = fi.dir();
+    if (!dir.exists()) {
+        if (!dir.mkpath(QStringLiteral("."))) {
+            return false;
+        }
+    }
+    QSaveFile file(path);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        return false;
+    }
+    const QByteArray utf8 = content.toUtf8();
+    if (file.write(utf8) != utf8.size()) {
+        file.cancelWriting();
+        return false;
+    }
+    return file.commit();
 }
 
 } // namespace caelestia

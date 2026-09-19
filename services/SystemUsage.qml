@@ -21,23 +21,15 @@ Singleton {
     property real gpuTemp: SysMonitor.gpu.temperature || 0
 
     // Memory properties
-    property real memUsed
-    property real memTotal
-    readonly property real memPerc: memTotal > 0 ? memUsed / memTotal : 0
+    readonly property real memUsed: SysMonitor.memUsed
+    readonly property real memTotal: SysMonitor.memTotal
+    readonly property real memPerc: SysMonitor.memPerc
 
     // Storage properties (aggregated)
-    readonly property real storagePerc: {
-        let totalUsed = 0;
-        let totalSize = 0;
-        for (const disk of disks) {
-            totalUsed += disk.used;
-            totalSize += disk.total;
-        }
-        return totalSize > 0 ? totalUsed / totalSize : 0;
-    }
+    readonly property real storagePerc: SysMonitor.storagePerc
 
     // Individual disks: Array of { mount, used, total, free, perc }
-    property var disks: []
+    readonly property var disks: SysMonitor.formattedDisks
 
     property real lastCpuIdle
     property real lastCpuTotal
@@ -120,33 +112,6 @@ Singleton {
             let data = SysMonitor.cpu;
             if (!root.cpuName) root.cpuName = root.cleanCpuName(data.model || "");
             root.cpuTemp = data.temperature || 0;
-        }
-        
-        function onMemoryChanged() {
-            let m = SysMonitor.memory;
-            root.memTotal = m.total || 1;
-            const free = m.free || 0;
-            const buf = m.buffers || 0;
-            const cached = m.cached || 0;
-            root.memUsed = (root.memTotal - (m.available || (free + buf + cached)));
-        }
-        
-        function onDiskmountsChanged() {
-            let mounts = SysMonitor.diskmounts;
-            let diskList = [];
-            for (let mount of mounts) {
-                if (mount.fstype !== "tmpfs" && mount.fstype !== "devtmpfs") {
-                    // C++ provides size in GB. We format disks in KiB, so GB * 1024 * 1024.
-                    diskList.push({
-                        mount: mount.device,
-                        used: mount.used * 1024 * 1024,
-                        total: mount.size * 1024 * 1024,
-                        free: mount.avail * 1024 * 1024,
-                        perc: mount.percent / 100.0
-                    });
-                }
-            }
-            root.disks = diskList;
         }
     }
 

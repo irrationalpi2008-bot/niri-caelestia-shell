@@ -30,8 +30,6 @@ Singleton {
     function requestUpdate() {
         if (!_updatePending) {
             _updatePending = true;
-            _luminanceCache = {};
-            _luminanceCacheSize = 0;
             Qt.callLater(() => {
                 _updatePending = false;
                 tPalette.updateAll();
@@ -39,7 +37,6 @@ Singleton {
         }
     }
 
-    // Invalidate luminance cache and schedule tPalette update when inputs change
     onShowPreviewChanged: requestUpdate()
     onWallLuminanceChanged: requestUpdate()
     onLightChanged: requestUpdate()
@@ -61,38 +58,12 @@ Singleton {
         function onM3errorChanged(): void { root.requestUpdate(); }
     }
 
-    // Luminance cache to avoid redundant Math.pow() calls
-    property var _luminanceCache: ({})
-    property int _luminanceCacheSize: 0
-
     function getLuminance(c: color): real {
-        if (c.r == 0 && c.g == 0 && c.b == 0)
-            return 0;
-        // Use color string as cache key
-        const key = "" + c;
-        if (key in _luminanceCache)
-            return _luminanceCache[key];
-        const val = Math.sqrt(0.299 * (c.r * c.r) + 0.587 * (c.g * c.g) + 0.114 * (c.b * c.b));
-        // Limit cache size to prevent unbounded growth
-        if (_luminanceCacheSize > 200) {
-            _luminanceCache = {};
-            _luminanceCacheSize = 0;
-        }
-        _luminanceCache[key] = val;
-        _luminanceCacheSize++;
-        return val;
+        return CUtils.getLuminance(c);
     }
 
     function alterColour(c: color, a: real, layer: int): color {
-        const luminance = getLuminance(c);
-
-        const offset = (!light || layer == 1 ? 1 : -layer / 2) * (light ? 0.2 : 0.3) * (1 - transparency.base) * (1 + wallLuminance * (light ? (layer == 1 ? 3 : 1) : 2.5));
-        const scale = (luminance + offset) / luminance;
-        const r = Math.max(0, Math.min(1, c.r * scale));
-        const g = Math.max(0, Math.min(1, c.g * scale));
-        const b = Math.max(0, Math.min(1, c.b * scale));
-
-        return Qt.rgba(r, g, b, a);
+        return CUtils.alterColour(c, a, layer, root.light, root.transparency.base, root.wallLuminance);
     }
 
     function layer(c: color, layer: var): color {
@@ -103,9 +74,7 @@ Singleton {
     }
 
     function on(c: color): color {
-        if (c.hslLightness < 0.5)
-            return Qt.hsla(c.hslHue, c.hslSaturation, 0.9, 1);
-        return Qt.hsla(c.hslHue, c.hslSaturation, 0.1, 1);
+        return CUtils.onColor(c);
     }
 
     function load(data: string, isPreview: bool): void {
@@ -157,10 +126,10 @@ Singleton {
             colours: colours
         };
 
-        // Ensure directory exists, then write via FileView
         const jsonContent = JSON.stringify(stateData, null, 2);
-        ensureStateDirProcess._pendingContent = jsonContent;
-        ensureStateDirProcess.running = true;
+        schemeStateFile.watchChanges = false;
+        CUtils.writeTextFile(`${Paths.state}/scheme.json`, jsonContent);
+        schemeStateFile.watchChanges = true;
     }
 
     FileView {
@@ -202,23 +171,6 @@ Singleton {
             );
             // Update local state
             root.currentLight = (mode === "light");
-        }
-    }
-
-    Process {
-        id: ensureStateDirProcess
-
-        property string _pendingContent
-
-        command: ["mkdir", "-p", Paths.state]
-        running: false
-
-        onExited: (exitCode, exitStatus) => {
-            if (exitCode === 0 && _pendingContent) {
-                schemeStateFile.watchChanges = false;
-                schemeStateFile.setText(_pendingContent);
-                schemeStateFile.watchChanges = true;
-            }
         }
     }
 
@@ -302,65 +254,9 @@ Singleton {
         property color m3onTertiaryFixed
         property color m3onTertiaryFixedVariant
 
-        // Recompute all palette colors in one pass when inputs change
+        // Recompute all palette colors in one pass in native C++ when inputs change
         function updateAll(): void {
-            const p = root.palette;
-            // Layer-0 colors (use base alpha)
-            m3background = root.layer(p.m3background, 0);
-            m3surface = root.layer(p.m3surface, 0);
-            m3surfaceDim = root.layer(p.m3surfaceDim, 0);
-            m3surfaceBright = root.layer(p.m3surfaceBright, 0);
-            m3surfaceVariant = root.layer(p.m3surfaceVariant, 0);
-            m3inverseSurface = root.layer(p.m3inverseSurface, 0);
-            // Layer-1 colors (default layer)
-            m3primary_paletteKeyColor = root.layer(p.m3primary_paletteKeyColor);
-            m3secondary_paletteKeyColor = root.layer(p.m3secondary_paletteKeyColor);
-            m3tertiary_paletteKeyColor = root.layer(p.m3tertiary_paletteKeyColor);
-            m3neutral_paletteKeyColor = root.layer(p.m3neutral_paletteKeyColor);
-            m3neutral_variant_paletteKeyColor = root.layer(p.m3neutral_variant_paletteKeyColor);
-            m3onBackground = root.layer(p.m3onBackground);
-            m3surfaceContainerLowest = root.layer(p.m3surfaceContainerLowest);
-            m3surfaceContainerLow = root.layer(p.m3surfaceContainerLow);
-            m3surfaceContainer = root.layer(p.m3surfaceContainer);
-            m3surfaceContainerHigh = root.layer(p.m3surfaceContainerHigh);
-            m3surfaceContainerHighest = root.layer(p.m3surfaceContainerHighest);
-            m3onSurface = root.layer(p.m3onSurface);
-            m3onSurfaceVariant = root.layer(p.m3onSurfaceVariant);
-            m3inverseOnSurface = root.layer(p.m3inverseOnSurface);
-            m3outline = root.layer(p.m3outline);
-            m3outlineVariant = root.layer(p.m3outlineVariant);
-            m3shadow = root.layer(p.m3shadow);
-            m3scrim = root.layer(p.m3scrim);
-            m3surfaceTint = root.layer(p.m3surfaceTint);
-            m3primary = root.layer(p.m3primary);
-            m3onPrimary = root.layer(p.m3onPrimary);
-            m3primaryContainer = root.layer(p.m3primaryContainer);
-            m3onPrimaryContainer = root.layer(p.m3onPrimaryContainer);
-            m3inversePrimary = root.layer(p.m3inversePrimary);
-            m3secondary = root.layer(p.m3secondary);
-            m3onSecondary = root.layer(p.m3onSecondary);
-            m3secondaryContainer = root.layer(p.m3secondaryContainer);
-            m3onSecondaryContainer = root.layer(p.m3onSecondaryContainer);
-            m3tertiary = root.layer(p.m3tertiary);
-            m3onTertiary = root.layer(p.m3onTertiary);
-            m3tertiaryContainer = root.layer(p.m3tertiaryContainer);
-            m3onTertiaryContainer = root.layer(p.m3onTertiaryContainer);
-            m3error = root.layer(p.m3error);
-            m3onError = root.layer(p.m3onError);
-            m3errorContainer = root.layer(p.m3errorContainer);
-            m3onErrorContainer = root.layer(p.m3onErrorContainer);
-            m3primaryFixed = root.layer(p.m3primaryFixed);
-            m3primaryFixedDim = root.layer(p.m3primaryFixedDim);
-            m3onPrimaryFixed = root.layer(p.m3onPrimaryFixed);
-            m3onPrimaryFixedVariant = root.layer(p.m3onPrimaryFixedVariant);
-            m3secondaryFixed = root.layer(p.m3secondaryFixed);
-            m3secondaryFixedDim = root.layer(p.m3secondaryFixedDim);
-            m3onSecondaryFixed = root.layer(p.m3onSecondaryFixed);
-            m3onSecondaryFixedVariant = root.layer(p.m3onSecondaryFixedVariant);
-            m3tertiaryFixed = root.layer(p.m3tertiaryFixed);
-            m3tertiaryFixedDim = root.layer(p.m3tertiaryFixedDim);
-            m3onTertiaryFixed = root.layer(p.m3onTertiaryFixed);
-            m3onTertiaryFixedVariant = root.layer(p.m3onTertiaryFixedVariant);
+            CUtils.updateTransparentPalette(this, root.palette, root.transparency.enabled, root.transparency.base, root.transparency.layers, root.light, root.wallLuminance);
         }
     }
 

@@ -27,6 +27,13 @@ class SysMonitor : public QObject {
     Q_PROPERTY(QString cpuModelClean READ cpuModelClean NOTIFY cpuModelCleanChanged)
     Q_PROPERTY(QString gpuNameClean READ gpuNameClean NOTIFY gpuNameCleanChanged)
 
+    Q_PROPERTY(double memUsed READ memUsed NOTIFY memoryChanged)
+    Q_PROPERTY(double memTotal READ memTotalVal NOTIFY memoryChanged)
+    Q_PROPERTY(double memPerc READ memPerc NOTIFY memoryChanged)
+    Q_PROPERTY(double storagePerc READ storagePerc NOTIFY diskmountsChanged)
+    Q_PROPERTY(QVariantList formattedDisks READ formattedDisks NOTIFY diskmountsChanged)
+    Q_PROPERTY(bool trackProcesses READ trackProcesses WRITE setTrackProcesses NOTIFY trackProcessesChanged)
+
     Q_PROPERTY(double downloadSpeed READ downloadSpeed NOTIFY networkRatesChanged)
     Q_PROPERTY(double uploadSpeed READ uploadSpeed NOTIFY networkRatesChanged)
     Q_PROPERTY(double downloadTotal READ downloadTotal NOTIFY networkRatesChanged)
@@ -54,6 +61,14 @@ public:
     double cpuPerc() const;
     QString cpuModelClean() const;
     QString gpuNameClean() const;
+
+    double memUsed() const;
+    double memTotalVal() const;
+    double memPerc() const;
+    double storagePerc() const;
+    QVariantList formattedDisks() const;
+    bool trackProcesses() const;
+    void setTrackProcesses(bool track);
 
     double downloadSpeed() const;
     double uploadSpeed() const;
@@ -93,6 +108,7 @@ signals:
     void updateIntervalChanged();
     void maxProcessesChanged();
     void sortByChanged();
+    void trackProcessesChanged();
 
 private:
     void updateMemory();
@@ -126,6 +142,13 @@ private:
     QString m_gpuNameClean;
     qint64 m_lastCpuTotal = 0;
     qint64 m_lastCpuIdle = 0;
+
+    double m_memUsed = 0.0;
+    double m_memTotalVal = 1.0;
+    double m_memPerc = 0.0;
+    double m_storagePerc = 0.0;
+    QVariantList m_formattedDisks;
+    bool m_trackProcesses = false;
 
     double m_downloadSpeed = 0.0;
     double m_uploadSpeed = 0.0;

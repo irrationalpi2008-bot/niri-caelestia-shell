@@ -31,6 +31,25 @@ public:
         const QList<QObject*>& items,
         const QStringList& keys,
         const QList<qreal>& weights = {}) const;
+
+    Q_INVOKABLE qreal getLuminance(const QColor& c) const;
+    Q_INVOKABLE QColor alterColour(
+        const QColor& c,
+        qreal a,
+        int layer,
+        bool light,
+        qreal baseTransparency,
+        qreal wallLuminance) const;
+    Q_INVOKABLE QColor onColor(const QColor& c) const;
+    Q_INVOKABLE void updateTransparentPalette(
+        QObject* targetTPalette,
+        QObject* sourcePalette,
+        bool transparencyEnabled,
+        qreal baseAlpha,
+        qreal layersAlpha,
+        bool light,
+        qreal wallLuminance) const;
+    Q_INVOKABLE bool writeTextFile(const QString& path, const QString& content) const;
 };
 
 } // namespace caelestia
