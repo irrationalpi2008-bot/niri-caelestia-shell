@@ -836,9 +836,11 @@ Item {
                         target: Colours
                     }
 
+                    visible: (NetworkUsage.downloadHistory?.length ?? 0) >= 2
+
                     Timer {
                         interval: Config.dashboard.resourceUpdateInterval
-                        running: true
+                        running: sparklineCanvas.visible && (sparklineCanvas.Window.window?.visible ?? true)
                         repeat: true
                         onTriggered: sparklineCanvas._tickCount++
                     }
@@ -848,7 +850,7 @@ Item {
                         to: 1
                         duration: Config.dashboard.resourceUpdateInterval
                         loops: Animation.Infinite
-                        running: true
+                        running: sparklineCanvas.visible && (sparklineCanvas.Window.window?.visible ?? true)
                     }
 
                     Behavior on smoothMax {

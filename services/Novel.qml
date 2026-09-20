@@ -188,9 +188,9 @@ Singleton {
 
     Timer {
         id: healthPoller
-        interval: 2000
+        interval: root.serverReady ? 60000 : 2000
         repeat: true
-        running: true
+        running: Config.extra.novel
         onTriggered: {
             if (!Config.extra.novel) {
                 if (serverProcess.running) {

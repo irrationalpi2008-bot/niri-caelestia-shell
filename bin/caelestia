@@ -318,6 +318,8 @@ cmd_restart() {
     echo -e "${C_CYAN}[caelestia]${C_RESET} Restarting Caelestia Shell..."
     pkill -f "quickshell.*shell\.qml" 2>/dev/null || true
     pkill -f "qs.*$REPO_ROOT" 2>/dev/null || true
+    pkill -f "manga_server\.py" 2>/dev/null || true
+    pkill -f "scripts/novel/main\.py" 2>/dev/null || true
     sleep 0.5
     qs -p "$REPO_ROOT/shell.qml" >/dev/null 2>&1 &
     disown
@@ -339,6 +341,8 @@ cmd_stop() {
     echo -e "${C_CYAN}[caelestia]${C_RESET} Stopping Caelestia Shell..."
     pkill -f "quickshell.*shell\.qml" 2>/dev/null || true
     pkill -f "qs" 2>/dev/null || true
+    pkill -f "manga_server\.py" 2>/dev/null || true
+    pkill -f "scripts/novel/main\.py" 2>/dev/null || true
     echo -e "${C_GREEN}[caelestia]${C_RESET} ${C_BOLD}✔${C_RESET} Shell stopped."
 }
 

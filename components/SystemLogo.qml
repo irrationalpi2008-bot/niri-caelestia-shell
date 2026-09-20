@@ -2,8 +2,8 @@ pragma ComponentBehavior: Bound
 
 import QtQuick.Effects
 import Quickshell
-import Quickshell.Io
 import Quickshell.Widgets
+import qs.utils
 
 IconImage {
     id: root
@@ -15,17 +15,7 @@ IconImage {
     smooth: true
     asynchronous: true
     layer.enabled: colorOverride !== ""
-
-    Process {
-        running: true
-        command: ["sh", "-c", ". /etc/os-release && echo $LOGO"]
-
-        stdout: StdioCollector {
-            onStreamFinished: () => {
-                root.source = Quickshell.iconPath(this.text.trim());
-            }
-        }
-    }
+    source: SysInfo.osLogo
 
     layer.effect: MultiEffect {
         colorization: 1

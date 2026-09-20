@@ -343,26 +343,6 @@ Singleton {
         target: Nmcli
     }
 
-    Timer {
-        id: monitorDebounce
-
-        interval: 200
-        onTriggered: {
-            Nmcli.getNetworks(() => {
-                syncNetworksFromNmcli();
-            });
-            getEthernetDevices();
-        }
-    }
-
-    Process {
-        running: true
-        command: ["nmcli", "m"]
-        stdout: SplitParser {
-            onRead: monitorDebounce.start()
-        }
-    }
-
     Component {
         id: apComp
 

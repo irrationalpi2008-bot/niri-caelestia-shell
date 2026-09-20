@@ -166,13 +166,14 @@ Singleton {
                 console.warn("[ServiceManga] Server exited with code", code)
             }
         }
+        Component.onDestruction: running = false
     }
 
     Timer {
         id: healthPoller
-        interval: 2000
+        interval: root.serverReady ? 60000 : 2000
         repeat: true
-        running: true
+        running: Config.extra.manga
         onTriggered: {
             if (!Config.extra.manga) {
                 if (serverProcess.running) {

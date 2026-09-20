@@ -1277,6 +1277,7 @@ Singleton {
             onRead: root.refreshOnConnectionChange()
         }
         onExited: monitorRestartTimer.start() // qmllint disable signal-handler-parameters
+        Component.onDestruction: running = false
     }
 
     Timer {

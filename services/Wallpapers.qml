@@ -51,15 +51,12 @@ Searcher {
     }
 
     function applyWallpaper(path: string): void {
+        if (actualCurrent === path && initialized)
+            return;
         actualCurrent = path;
         stateFile.watchChanges = false;
         CUtils.writeTextFile(root.currentNamePath, path);
         stateFile.watchChanges = true;
-        
-        // Small delay to ensure filesystem sync before color generation starts
-        Qt.callLater(() => {
-            runColorGeneration(path);
-        });
     }
 
     // Dedicated process for sequential frame extraction
@@ -242,7 +239,7 @@ Searcher {
             const loadedPath = text().trim();
             if (loadedPath) {
                 console.log("Loading initial wallpaper from state:", loadedPath);
-                root.setWallpaper(loadedPath);
+                root.actualCurrent = loadedPath;
             } else {
                 root.loadFromConfig();
             }

@@ -180,8 +180,10 @@ Singleton {
         function onCurrentChanged(): void {
             wallAnalyser.source = Wallpapers.current;
 
-            // Regenerate dynamic scheme if currently active
-            Schemes.regenerateDynamic();
+            // Regenerate dynamic scheme if currently active and shell is initialized
+            if (Wallpapers.initialized) {
+                Schemes.regenerateDynamic();
+            }
         }
     }
 
