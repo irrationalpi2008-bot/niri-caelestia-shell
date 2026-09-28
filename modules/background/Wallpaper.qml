@@ -195,6 +195,11 @@ Item {
             id: img
             anchors.fill: parent
             path: !item.isVideo ? item.path : ""
+
+            // RAM/VRAM Optimization: Ensure high-res wallpapers are bounded to screen resolution
+            sourceSize.width: root.width
+            sourceSize.height: root.height
+
             visible: !item.isVideo
             opacity: status === Image.Ready ? 1 : 0
             z: 2

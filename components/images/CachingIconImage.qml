@@ -28,6 +28,8 @@ Item {
         CachingImage {
             path: Paths.toLocalFile(root.source)
             fillMode: Image.PreserveAspectFit
+            sourceSize.width: root.actualSize > 0 ? root.actualSize : root.implicitSize
+            sourceSize.height: root.actualSize > 0 ? root.actualSize : root.implicitSize
         }
     }
 

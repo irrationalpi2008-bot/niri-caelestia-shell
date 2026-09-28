@@ -24,6 +24,7 @@ public:
     Q_INVOKABLE bool copyFile(const QUrl& source, const QUrl& target, bool overwrite = true) const;
     Q_INVOKABLE bool deleteFile(const QUrl& path) const;
     Q_INVOKABLE bool exists(const QString& path) const;
+    Q_INVOKABLE bool hasExecutable(const QString& name) const;
     Q_INVOKABLE QString toLocalFile(const QUrl& url) const;
     Q_INVOKABLE qreal getBacklightBrightness() const;
     Q_INVOKABLE QList<QObject*> fuzzySearch(

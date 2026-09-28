@@ -40,6 +40,7 @@ StyledListView {
     ListModel { id: clipboardModel }
 
     property var _clipFilteredValues: {
+        if (state !== "clip") return [];
         const query = _debouncedText.slice(`${Config.launcher.actionPrefix}clip `.length).toLowerCase();
         let result = [];
         for (let i = 0; i < clipboardModel.count; i++) {

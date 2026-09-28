@@ -92,28 +92,27 @@ Singleton {
         Monitor {}
     }
 
+    Component.onCompleted: {
+        root._ddcChecked = true;
+        root._ddcAvailable = CUtils.hasExecutable("ddcutil");
+        if (root._ddcAvailable) {
+            ddcProc.running = true;
+        }
+        if (CUtils.hasExecutable("asdbctl")) {
+            asdbctlProc.running = true;
+        }
+    }
+
     Process {
-        running: true
-        command: ["sh", "-c", "asdbctl get"] // To avoid warnings if asdbctl is not installed
+        id: asdbctlProc
+        running: false
+        command: ["asdbctl", "get"]
         stdout: StdioCollector {
             onStreamFinished: root.appleDisplayPresent = text.trim().length > 0
         }
         onExited: (exitCode) => {
             if (exitCode !== 0) {
                 root.appleDisplayPresent = false;
-            }
-        }
-    }
-
-    Process {
-        id: ddcCheck
-        running: true
-        command: ["which", "ddcutil"]
-        onExited: (exitCode) => {
-            root._ddcChecked = true;
-            root._ddcAvailable = exitCode === 0;
-            if (root._ddcAvailable) {
-                ddcProc.running = true;
             }
         }
     }

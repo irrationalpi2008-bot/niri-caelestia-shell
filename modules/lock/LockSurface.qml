@@ -203,9 +203,9 @@ WlSessionLockSurface {
         opacity: 1
         z: 1
 
-        visible: status === Image.Ready || status === Image.Loading
+        visible: (status === Image.Ready || status === Image.Loading) && opacity > 0
 
-        layer.enabled: true
+        layer.enabled: visible
         layer.effect: MultiEffect {
             autoPaddingEnabled: false
             blurEnabled: true
@@ -229,7 +229,9 @@ WlSessionLockSurface {
         opacity: 0
         z: 2
 
-        layer.enabled: true
+        visible: opacity > 0
+
+        layer.enabled: visible
         layer.effect: MultiEffect {
             autoPaddingEnabled: false
             blurEnabled: true
@@ -252,7 +254,7 @@ WlSessionLockSurface {
         id: extrasLayer
         anchors.fill: parent
         z: 4
-        visible: Config.lock.showExtras
+        visible: Config.lock.showExtras && opacity > 0
         opacity: 0
 
         ParallelAnimation {

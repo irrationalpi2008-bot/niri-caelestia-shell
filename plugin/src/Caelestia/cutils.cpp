@@ -12,6 +12,7 @@
 #include <qfuturewatcher.h>
 #include <qqmlengine.h>
 #include <qsavefile.h>
+#include <qstandardpaths.h>
 #include <vector>
 
 namespace caelestia {
@@ -127,6 +128,10 @@ bool CUtils::deleteFile(const QUrl& path) const {
 
 bool CUtils::exists(const QString& path) const {
     return QFile::exists(path);
+}
+
+bool CUtils::hasExecutable(const QString& name) const {
+    return !QStandardPaths::findExecutable(name).isEmpty();
 }
 
 QString CUtils::toLocalFile(const QUrl& url) const {

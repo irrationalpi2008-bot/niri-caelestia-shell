@@ -26,7 +26,7 @@ Item {
         sourceSize.width: width
         sourceSize.height: height
 
-        layer.enabled: true
+        layer.enabled: status === Image.Ready && opacity > 0
         layer.effect: ShaderEffect {
             required property Item source
             readonly property Item maskSource: mask
