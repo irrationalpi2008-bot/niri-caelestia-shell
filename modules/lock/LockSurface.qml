@@ -203,7 +203,7 @@ WlSessionLockSurface {
         opacity: 1
         z: 1
 
-        visible: (status === Image.Ready || status === Image.Loading) && opacity > 0
+        visible: (surface.opacity > 0) && (status === Image.Ready || status === Image.Loading) && opacity > 0
 
         layer.enabled: visible
         layer.effect: MultiEffect {
@@ -307,7 +307,7 @@ WlSessionLockSurface {
             color: Colours.tPalette.m3surfaceContainer
             opacity: Colours.transparency.enabled ? Colours.transparency.base : 1
 
-            layer.enabled: true
+            layer.enabled: surface.opacity > 0
             layer.effect: MultiEffect {
                 shadowEnabled: true
                 blurMax: 16
@@ -340,7 +340,7 @@ WlSessionLockSurface {
             color: Colours.tPalette.m3surfaceContainer
             opacity: Colours.transparency.enabled ? Colours.transparency.base : 1
 
-            layer.enabled: true
+            layer.enabled: surface.opacity > 0
             layer.effect: MultiEffect {
                 shadowEnabled: true
                 blurMax: 16
@@ -382,7 +382,7 @@ WlSessionLockSurface {
             radius: lockContent.iconSize / 4 * Appearance.rounding.scale
             opacity: Colours.transparency.enabled ? Colours.transparency.base : 1
 
-            layer.enabled: true
+            layer.enabled: surface.opacity > 0
             layer.effect: MultiEffect {
                 shadowEnabled: true
                 blurMax: 36

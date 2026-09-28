@@ -104,7 +104,6 @@ CustomMouseArea {
 
             if (Config.bar.showOnHover)
                 bar.isHovered = false;
-            console.log("Bar hidden");
         }
     }
 

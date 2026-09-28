@@ -112,6 +112,8 @@ StyledRect {
                 source: (root.imageReady && root.entryId === root._decodingId && root.imagePath !== "") ? "file://" + root.imagePath : ""
                 fillMode: Image.PreserveAspectFit
                 asynchronous: true
+                sourceSize.width: width
+                sourceSize.height: height
                 cache: false
                 smooth: true
 

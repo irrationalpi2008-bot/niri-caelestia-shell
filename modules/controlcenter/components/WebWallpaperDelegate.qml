@@ -44,6 +44,8 @@ Item {
             anchors.fill: parent
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
+            sourceSize: Qt.size(parent.width, parent.height)
+            visible: opacity > 0
             
             opacity: status === Image.Ready ? 1 : 0
             Behavior on opacity { NumberAnimation { duration: 300 } }

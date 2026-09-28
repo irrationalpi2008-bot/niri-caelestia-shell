@@ -121,27 +121,14 @@ ClippingRectangle {
         implicitWidth: root.width
         implicitHeight: root.height
 
-        property bool hasBeenLoaded: false
+        readonly property int diff: root.session ? Math.abs(root.session.activeIndex - pane.paneIndex) : 999
+        visible: diff === 0 || (!layout.animationComplete && diff <= 1)
 
         function updateActive(): void {
             if (!root.session) return;
-            const diff = Math.abs(root.session.activeIndex - pane.paneIndex);
-            const isActivePane = diff === 0;
-            let shouldBeActive = false;
-
-            if (!layout.initialOpeningComplete) {
-                shouldBeActive = isActivePane;
-            } else {
-                if (diff <= 1) {
-                    shouldBeActive = true;
-                } else if (pane.hasBeenLoaded) {
-                    shouldBeActive = true;
-                } else {
-                    shouldBeActive = layout.animationComplete;
-                }
-            }
-
-            loader.active = shouldBeActive;
+            const currentDiff = Math.abs(root.session.activeIndex - pane.paneIndex);
+            // Keep active pane and immediate adjacent neighbor (diff <= 1) loaded; unload distant panes
+            loader.active = currentDiff <= 1;
         }
 
         Loader {
@@ -156,20 +143,10 @@ ClippingRectangle {
             }
 
             onActiveChanged: {
-                if (active && !pane.hasBeenLoaded) {
-                    pane.hasBeenLoaded = true;
-                }
-
                 if (active && !item && root.session) {
                     loader.setSource(pane.componentPath, {
                         "session": root.session
                     });
-                }
-            }
-
-            onItemChanged: {
-                if (item) {
-                    pane.hasBeenLoaded = true;
                 }
             }
         }

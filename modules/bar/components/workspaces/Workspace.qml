@@ -31,10 +31,6 @@ ColumnLayout {
 
     // clip: true
 
-    Behavior on scale {
-        Anim {}
-    }
-
     Behavior on Layout.preferredHeight {
         Anim {}
     }

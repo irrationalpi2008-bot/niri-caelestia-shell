@@ -71,8 +71,6 @@ GridView {
             color: Colours.tPalette.m3surfaceContainer
             radius: itemRadius
             antialiasing: true
-            layer.enabled: true
-            layer.smooth: true
 
             CachingImage {
                 id: cachingImage
@@ -105,7 +103,7 @@ GridView {
                 font.pointSize: Appearance.font.size.headlineLarge * 2
                 visible: rootDelegate.isVideo
 
-                layer.enabled: true
+                layer.enabled: rootDelegate.isVideo
                 layer.effect: MultiEffect {
                     shadowEnabled: true
                     shadowColor: Qt.alpha("black", 0.5)

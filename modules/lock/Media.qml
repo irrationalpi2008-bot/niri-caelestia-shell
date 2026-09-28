@@ -18,6 +18,7 @@ Item {
     implicitHeight: layout.implicitHeight
 
     Image {
+        id: trackArt
         anchors.fill: parent
         source: Players.active?.trackArtUrl ?? ""
 
@@ -47,7 +48,7 @@ Item {
         id: mask
 
         anchors.fill: parent
-        layer.enabled: true
+        layer.enabled: trackArt.layer.enabled
         visible: false
 
         gradient: Gradient {

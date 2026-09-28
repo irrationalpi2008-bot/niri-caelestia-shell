@@ -86,7 +86,7 @@ Item {
             font.pointSize: Appearance.font.size.headlineLarge * 2
             visible: root.isVideo
 
-            layer.enabled: true
+            layer.enabled: root.isVideo
             layer.effect: MultiEffect {
                 shadowEnabled: true
                 shadowColor: Qt.alpha("black", 0.5)

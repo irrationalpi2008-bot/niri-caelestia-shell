@@ -110,6 +110,13 @@ void CachingImageManager::updateSource(const QString& path) {
         return;
     }
 
+    if (!QFileInfo::exists(path)) {
+        if (m_item) {
+            m_item->setProperty("source", QUrl());
+        }
+        return;
+    }
+
     m_shaPath = path;
 
     const auto future = QtConcurrent::run(&CachingImageManager::sha256sum, path);
@@ -222,6 +229,10 @@ void CachingImageManager::evictIfNeeded() {
 
 void CachingImageManager::createCache(
     const QString& path, const QString& cache, const QString& fillMode, const QSize& size) {
+    if (path.isEmpty() || !QFileInfo::exists(path)) {
+        return;
+    }
+
     // Evict old entries before creating new ones
     evictIfNeeded();
 
@@ -278,6 +289,10 @@ void CachingImageManager::createCache(
 }
 
 QString CachingImageManager::sha256sum(const QString& path) {
+    if (path.isEmpty() || !QFileInfo::exists(path)) {
+        return "";
+    }
+
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
         qWarning() << "CachingImageManager::sha256sum: failed to open" << path;

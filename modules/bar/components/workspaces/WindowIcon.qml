@@ -56,7 +56,7 @@ Item {
         anchors.left: parent.left
         anchors.leftMargin: iconLoader.implicitWidth + Appearance.padding.xs
         anchors.verticalCenter: parent.verticalCenter
-        active: (Niri.wsContextType !== "none" && Config.bar.workspaces.windowRighClickContext)
+        active: popupActive && Config.bar.workspaces.windowRighClickContext && (Niri.wsContextType !== "none")
         sourceComponent: WindowIconContext {
             iconObj: iconItem
         }
